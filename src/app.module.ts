@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { database } from './config/database';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { database } from './config/database';
       entities: [],
       synchronize: true,
     }),
+    HttpModule,
   ],
   controllers: [AppController],
   providers: [AppService],
