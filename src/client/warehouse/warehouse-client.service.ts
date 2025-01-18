@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { Order } from '../../model/entity/order.entity';
 import { externalApiUrls } from '../../config/external-api-urls';
@@ -9,8 +13,7 @@ import {
   OrderScheduledResponse,
   WarehouseNotReadyResponse,
 } from './warehouse-responses.interface';
-import { AxiosError, AxiosResponse } from 'axios';
-import { catchError, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class WarehouseClientService {
@@ -21,30 +24,29 @@ export class WarehouseClientService {
   async sendOrderToWarehouse(
     order: Order,
   ): Promise<
-    AxiosResponse<
-      | OrderAcceptedResponse
-      | OrderScheduledResponse
-      | OrderPartiallyAcceptedResponse
-      | OrderRejectedResponse
-      | WarehouseNotReadyResponse,
-      any
-    >
+    | OrderAcceptedResponse
+    | OrderScheduledResponse
+    | OrderPartiallyAcceptedResponse
+    | OrderRejectedResponse
+    | WarehouseNotReadyResponse
   > {
-    return await firstValueFrom(
-      this.httpService
-        .post<
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post<
           | OrderAcceptedResponse
           | OrderScheduledResponse
           | OrderPartiallyAcceptedResponse
           | OrderRejectedResponse
           | WarehouseNotReadyResponse
-        >(`${externalApiUrls.warehouseService}/v1/orders}`, { order })
-        .pipe(
-          catchError((error: AxiosError) => {
-            this.logger.error(error.response);
-            throw error;
-          }),
-        ),
-    );
+        >(`${externalApiUrls.warehouseService}/v1/orders}`, { order }),
+      );
+      return response.data;
+    } catch (error) {
+      this.logger.error('Unable to reach the warehouse service: ', error);
+      throw new ServiceUnavailableException(
+        'Unable to reach the warehouse service: ',
+        error,
+      );
+    }
   }
 }

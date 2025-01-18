@@ -3,6 +3,13 @@ import { OrderRequest } from '../model/interface/order-request.interface';
 import { WarehouseClientService } from '../client/warehouse/warehouse-client.service';
 import { DataSource } from 'typeorm';
 import { Order } from '../model/entity/order.entity';
+import {
+  OrderAcceptedResponse,
+  OrderPartiallyAcceptedResponse,
+  OrderRejectedResponse,
+  OrderScheduledResponse,
+  WarehouseNotReadyResponse,
+} from '../client/warehouse/warehouse-responses.interface';
 
 @Injectable()
 export class OrderService {
@@ -20,28 +27,32 @@ export class OrderService {
     } catch (error) {
       // Examine the difference in structure between error, error.response, error.data, error.stack etc.
       this.logger.error('Failed to save the order in the database: ', error);
-      throw new Error(error);
+      throw error;
     }
   }
 
-  async sendOrderToWarehouse(orderRequest: OrderRequest) {
-    let order: Order | null = null;
+  async sendOrderToWarehouse(
+    order: Order,
+  ): Promise<
+    | OrderAcceptedResponse
+    | OrderScheduledResponse
+    | OrderPartiallyAcceptedResponse
+    | OrderRejectedResponse
+    | WarehouseNotReadyResponse
+  > {
+    return await this.warehouseClientService.sendOrderToWarehouse(order);
+  }
 
-    try {
-      order = await this.saveOrderInternally(orderRequest);
-    } catch (dbError) {
-      this.logger.error('Failed to save the order in the database: ', dbError);
-      throw new Error(dbError);
-    }
-
-    try {
-      await this.warehouseClientService.sendOrderToWarehouse(order);
-    } catch (warehouseError) {
-      this.logger.error(
-        'Failed to send the order to the warehouse: ',
-        warehouseError,
-      );
-      throw new Error(warehouseError);
-    }
+  async createOrder(
+    orderRequest: OrderRequest,
+  ): Promise<
+    | OrderAcceptedResponse
+    | OrderScheduledResponse
+    | OrderPartiallyAcceptedResponse
+    | OrderRejectedResponse
+    | WarehouseNotReadyResponse
+  > {
+    const order = await this.saveOrderInternally(orderRequest);
+    return await this.sendOrderToWarehouse(order);
   }
 }
