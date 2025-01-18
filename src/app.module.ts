@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { database } from './config/database';
 import { HttpModule } from '@nestjs/axios';
+import { Order } from './model/entity/order.entity';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { HttpModule } from '@nestjs/axios';
       username: database.username,
       password: database.password,
       database: database.database,
-      entities: [],
+      entities: [Order],
       synchronize: true,
     }),
     HttpModule,
