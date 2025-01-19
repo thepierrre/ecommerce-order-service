@@ -28,7 +28,7 @@ export class OrderService {
       const newOrder = this.orderRepository.create(orderRequest);
       return this.orderRepository.save(newOrder);
     } catch (error) {
-      // Examine the difference in structure between error, error.response, error.data, error.stack etc.
+      //TODO: Examine the difference in structure between error, error.response, error.data, error.stack etc.
       this.logger.error('Failed to save the order in the database: ', error);
       throw error;
     }
