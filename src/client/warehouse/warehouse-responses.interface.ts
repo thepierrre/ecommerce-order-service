@@ -15,7 +15,7 @@ export interface OrderAcceptedResponse {
   message: 'Order received and accepted.';
   status: OrderStatus.ACCEPTED;
   orderId: string;
-  processingStartTime: string;
+  processingStartTime: Date;
   expectedDispatchDate: Date;
 }
 

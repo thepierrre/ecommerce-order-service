@@ -1,20 +1,9 @@
-interface ShippingAddress {
-  line1: string;
-  line2: string;
-  city: string;
-  stateOrProvince: string;
-  zipCode: string;
-  country: string;
-}
-
-interface OrderItem {
-  productId: string;
-  quantity: number;
-}
+import { OrderItem } from './order-item.interface';
+import { ShippingAddress } from './shipping-address.interface';
 
 export interface OrderRequest {
   userId: string;
   shippingAddress: ShippingAddress;
-  orderItems: OrderItem[];
+  items: OrderItem[];
   shippingMethod: string;
 }

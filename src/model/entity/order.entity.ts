@@ -1,13 +1,12 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
-  OneToMany,
 } from 'typeorm';
 import { OrderStatus } from '../enum/order-status.enum';
-import { OrderItem } from './order-item.entity';
+import { OrderItem } from '../interface/order-item.interface';
 
 @Entity()
 export class Order {
@@ -17,7 +16,7 @@ export class Order {
   @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ nullable: true })
   lastUpdatedAt: Date;
 
   @Column()
@@ -32,6 +31,6 @@ export class Order {
   @Column()
   transactionId: string;
 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
+  @Column('json')
   items: OrderItem[];
 }
