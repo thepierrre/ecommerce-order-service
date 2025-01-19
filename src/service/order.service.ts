@@ -14,10 +14,11 @@ import { OrderStatus } from '../model/enum/order-status.enum';
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(WarehouseClientService.name);
+
   constructor(
     private readonly warehouseClientService: WarehouseClientService,
     private orderRepository: Repository<Order>,
-    private readonly logger = new Logger(WarehouseClientService.name),
   ) {}
 
   async saveOrder(orderRequest: OrderRequest): Promise<Order> {
@@ -31,7 +32,7 @@ export class OrderService {
     }
   }
 
-  async updateOrder(orderId: string, status: OrderStatus): Promise<Order> {
+  async updateOrder(orderId: string, status: OrderStatus): Promise<void> {
     const existingOrder = await this.orderRepository.findOneBy({ id: orderId });
     if (!existingOrder) {
       this.logger.error(`Order with the id ${orderId} not found.`);
@@ -39,7 +40,7 @@ export class OrderService {
     }
 
     const updatedOrder = this.orderRepository.merge(existingOrder, { status });
-    return await this.orderRepository.save(updatedOrder);
+    await this.orderRepository.save(updatedOrder);
   }
 
   async sendOrderToWarehouse(
