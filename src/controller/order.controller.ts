@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
 import { OrderService } from '../service/order.service';
 import {
   OrderAcceptedResponse,
@@ -8,6 +8,7 @@ import {
   WarehouseNotReadyResponse,
 } from '../client/warehouse/warehouse-responses.interface';
 import { OrderRequest } from '../model/interface/order-request.interface';
+import { Response } from 'express';
 
 @Controller()
 export class OrderController {
@@ -16,6 +17,7 @@ export class OrderController {
   @Post('orders')
   create(
     @Body() orderRequest: OrderRequest,
+    @Res() response: Response,
   ):
     | Promise<
         | OrderAcceptedResponse
@@ -28,7 +30,9 @@ export class OrderController {
     try {
       return this.orderService.createOrder(orderRequest);
     } catch {
-      return 'Failed to create an order.';
+      response
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .send('Failed to create the order.');
     }
   }
 }
