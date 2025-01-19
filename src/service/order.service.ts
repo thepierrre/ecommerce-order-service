@@ -51,11 +51,26 @@ export class OrderService {
     | OrderRejectedResponse
     | WarehouseNotReadyResponse
   > {
-    const warehouseResponse =
-      await this.warehouseClientService.sendOrderToWarehouse(order);
+    try {
+      const warehouseResponse =
+        await this.warehouseClientService.sendOrderToWarehouse(order);
 
-    await this.updateOrder(order.id, warehouseResponse.status);
-    return warehouseResponse;
+      await this.updateOrder(order.id, warehouseResponse.status);
+
+      return warehouseResponse;
+    } catch (error) {
+      this.logger.error(
+        'Failed to send order to sendOrderToWarehouse: ',
+        error,
+      );
+
+      await this.updateOrder(
+        order.id,
+        OrderStatus.WAREHOUSE_SERVICE_UNAVAILABLE,
+      );
+
+      throw error;
+    }
   }
 
   async createOrder(
