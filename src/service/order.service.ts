@@ -11,6 +11,7 @@ import {
   WarehouseNotReadyResponse,
 } from '../client/warehouse/warehouse-responses.interface';
 import { OrderStatus } from '../model/enum/order-status.enum';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class OrderService {
@@ -18,6 +19,7 @@ export class OrderService {
 
   constructor(
     private readonly warehouseClientService: WarehouseClientService,
+    @InjectRepository(Order)
     private orderRepository: Repository<Order>,
   ) {}
 
