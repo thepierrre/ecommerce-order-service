@@ -40,10 +40,10 @@ export class OrderController {
 
   // Incoming from the warehouse application.
   @Patch('orders/:id')
-  updateOrder(
+  async updateOrder(
     @Body() orderRequest: { id: string; status: OrderStatus },
   ): Promise<void> {
     const { id, status } = orderRequest;
-    return this.orderService.updateOrder(id, status);
+    await this.orderService.updateOrder(id, status);
   }
 }
