@@ -15,7 +15,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class OrderService {
-  private readonly logger = new Logger(WarehouseClientService.name);
+  private readonly logger = new Logger(OrderService.name);
 
   constructor(
     private readonly warehouseClientService: WarehouseClientService,
@@ -23,29 +23,34 @@ export class OrderService {
     private orderRepository: Repository<Order>,
   ) {}
 
-  async saveOrder(orderRequest: OrderRequest): Promise<Order> {
+  async createOrder(orderRequest: OrderRequest): Promise<Order> {
     try {
-      const newOrder = this.orderRepository.create(orderRequest);
-      return this.orderRepository.save(newOrder);
+      const newOrder = this.orderRepository.create({
+        ...orderRequest,
+        status: OrderStatus.PENDING,
+      });
+      return await this.orderRepository.save(newOrder);
     } catch (error) {
       //TODO: Examine the difference in structure between error, error.response, error.data, error.stack etc.
-      this.logger.error('Failed to save the order in the database: ', error);
+      this.logger.error(`Failed to save the order: ${error.message}`);
       throw error;
     }
   }
 
-  async updateOrder(orderId: string, status: OrderStatus): Promise<void> {
+  async updateOrder(orderId: string, orderStatus: OrderStatus): Promise<Order> {
     const existingOrder = await this.orderRepository.findOneBy({ id: orderId });
     if (!existingOrder) {
       this.logger.error(`Order with the id ${orderId} not found.`);
       throw new NotFoundException(`Order with the id ${orderId} not found.`);
     }
 
-    const updatedOrder = this.orderRepository.merge(existingOrder, { status });
-    await this.orderRepository.save(updatedOrder);
+    const updatedOrder = this.orderRepository.merge(existingOrder, {
+      status: orderStatus,
+    });
+    return await this.orderRepository.save(updatedOrder);
   }
 
-  async sendOrderToWarehouse(
+  async sendNewOrderToWarehouse(
     order: Order,
   ): Promise<
     | OrderAcceptedResponse
@@ -63,8 +68,7 @@ export class OrderService {
       return warehouseResponse;
     } catch (error) {
       this.logger.error(
-        'Failed to send order to sendOrderToWarehouse: ',
-        error,
+        `Failed to send order to sendOrderToWarehouse: ${error.message}`,
       );
 
       await this.updateOrder(
@@ -76,7 +80,7 @@ export class OrderService {
     }
   }
 
-  async createOrder(
+  async createOrderAndSendToWarehouse(
     orderRequest: OrderRequest,
   ): Promise<
     | OrderAcceptedResponse
@@ -85,7 +89,7 @@ export class OrderService {
     | OrderRejectedResponse
     | WarehouseNotReadyResponse
   > {
-    const order = await this.saveOrder(orderRequest);
-    return await this.sendOrderToWarehouse(order);
+    const order = await this.createOrder(orderRequest);
+    return await this.sendNewOrderToWarehouse(order);
   }
 }

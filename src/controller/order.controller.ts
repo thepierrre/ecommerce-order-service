@@ -30,7 +30,7 @@ export class OrderController {
       >
     | string {
     try {
-      return this.orderService.createOrder(orderRequest);
+      return this.orderService.createOrderAndSendToWarehouse(orderRequest);
     } catch {
       response
         .status(HttpStatus.INTERNAL_SERVER_ERROR)

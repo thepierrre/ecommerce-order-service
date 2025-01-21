@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { OrderStatus } from '../enum/order-status.enum';
 import { OrderItem } from '../interface/order-item.interface';
+import { ShippingAddress } from '../interface/shipping-address.interface';
 
 @Entity()
 export class Order {
@@ -29,7 +30,10 @@ export class Order {
   amount: number;
 
   @Column()
-  transactionId: string;
+  shippingMethod: string;
+
+  @Column()
+  shippingAddress: ShippingAddress;
 
   @Column('json')
   items: OrderItem[];

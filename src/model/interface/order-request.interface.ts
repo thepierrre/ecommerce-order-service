@@ -6,4 +6,5 @@ export interface OrderRequest {
   shippingAddress: ShippingAddress;
   items: OrderItem[];
   shippingMethod: string;
+  amount: number;
 }

@@ -5,9 +5,14 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Order } from '../model/entity/order.entity';
 import { Repository } from 'typeorm';
 import { OrderRequest } from '../model/interface/order-request.interface';
-import { OrderAcceptedResponse } from '../client/warehouse/warehouse-responses.interface';
 import { OrderStatus } from '../model/enum/order-status.enum';
-import { OrderItem } from '../model/interface/order-item.interface';
+import {
+  order1,
+  order2,
+  orderRequestBody1,
+  updatedOrder,
+} from '../../test/util/service/order-service.mocks';
+import { Logger, NotFoundException } from '@nestjs/common';
 
 describe('OrderService', () => {
   let orderService: OrderService;
@@ -47,122 +52,95 @@ describe('OrderService', () => {
     orderRepository = module.get<Repository<Order>>(
       getRepositoryToken(Order),
     ) as jest.Mocked<Repository<Order>>;
+
+    jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
   });
 
   it('is defined', () => {
     expect(orderService).toBeDefined();
   });
 
-  //TODO: this tests too much right now - should only test saving to db
-  it('saveOrder: returns a newly created order', async () => {
-    const userId = 'a0c74a80-1a98-467c-8a9c-1db62b5c4b3e';
-    const orderId = 'c3d5b0f2-93f4-44c5-8039-9c6e932a2d19';
-    const productId1 = 'f4e72b13-7e54-4ea5-8ae6-5c1d362a3e9d';
-    const productId2 = 'bb78ad87-3ef8-45e2-b89f-4d57f29a88cd';
-    const productId3 = 'af109bda-18c3-46e4-b86e-77f9d65f9982';
-    const transactionId = '7f5b2e85-b9f4-4c93-a2c9-b1e7461cf4ea';
-    const createdAt = new Date(2026, 2, 20, 8, 0);
-    const processingStartTime = new Date(2026, 2, 20, 8, 0);
-    const expectedDispatchDate = new Date(2026, 2, 20);
-
-    const orderItems: OrderItem[] = [
-      { productId: productId1, price: 10.99, quantity: 1 },
-      { productId: productId2, price: 15.5, quantity: 5 },
-      { productId: productId3, price: 8.95, quantity: 10 },
-    ];
-
-    const requestData: OrderRequest = {
-      userId: userId,
-      shippingAddress: {
-        line1: 'Test Street 10',
-        city: 'Munich',
-        stateOrProvince: 'Bavaria',
-        zipCode: '2190100',
-        country: 'Germany',
-      },
-      items: orderItems,
-      shippingMethod: 'express',
-    };
-
-    const savedOrder: Order = {
-      id: orderId,
-      createdAt,
-      lastUpdatedAt: null,
-      userId,
-      status: OrderStatus.PENDING,
-      amount: 177.99,
-      transactionId,
-      items: [
-        {
-          productId: productId1,
-          price: 10.99,
-          quantity: 1,
-        },
-        {
-          productId: productId2,
-          price: 15.5,
-          quantity: 5,
-        },
-        {
-          productId: productId3,
-          price: 8.95,
-          quantity: 10,
-        },
-      ],
-    };
-
-    const orderResponse = {
-      amount: 177.99,
-      createdAt: new Date('2026-03-20T07:00:00.000Z'),
-      id: 'c3d5b0f2-93f4-44c5-8039-9c6e932a2d19',
-      items: [
-        {
-          productId: productId1,
-          price: 10.99,
-          quantity: 1,
-        },
-        {
-          productId: productId2,
-          price: 15.5,
-          quantity: 5,
-        },
-        {
-          productId: productId3,
-          price: 8.95,
-          quantity: 10,
-        },
-      ],
-      lastUpdatedAt: null,
-      status: 'PENDING',
-      transactionId: '7f5b2e85-b9f4-4c93-a2c9-b1e7461cf4ea',
-      userId: 'a0c74a80-1a98-467c-8a9c-1db62b5c4b3e',
-    };
-
-    jest.spyOn(orderRepository, 'save').mockResolvedValue(savedOrder);
-
-    const warehouseResponseData: OrderAcceptedResponse = {
-      message: 'Order received and accepted.',
-      status: OrderStatus.ACCEPTED,
-      orderId,
-      processingStartTime,
-      expectedDispatchDate,
-    };
+  it('createOrder: returns a newly created order', async () => {
+    jest.spyOn(orderRepository, 'create').mockImplementation(
+      (orderRequest: OrderRequest) =>
+        ({
+          ...orderRequest,
+          id: order1.id,
+          createdAt: order1.createdAt,
+          lastUpdatedAt: null,
+          status: OrderStatus.PENDING,
+        }) as Order,
+    );
 
     jest
-      .spyOn(warehouseClientService, 'sendOrderToWarehouse')
-      .mockResolvedValue(warehouseResponseData);
+      .spyOn(orderRepository, 'save')
+      .mockImplementation(async (order: Order) => {
+        return order;
+      });
 
-    const response = await orderService.saveOrder(requestData);
-    expect(response).toEqual(orderResponse);
+    const response = await orderService.createOrder(orderRequestBody1);
+
+    expect(orderRepository.create).toHaveBeenCalledWith({
+      ...orderRequestBody1,
+      status: OrderStatus.PENDING,
+    });
+
+    expect(orderRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: order1.id,
+        createdAt: order1.createdAt,
+      }),
+    );
+
+    expect(response).toEqual(order1);
   });
 
-  it('saveOrder: returns a database error', () => {});
+  it('createOrder: returns a database error', async () => {
+    jest.spyOn(orderRepository, 'create').mockImplementation(() => {
+      throw new Error('Cannot connect to the database.');
+    });
 
-  it('updateOrder: updates the order successfully', async () => {});
+    await expect(orderService.createOrder(orderRequestBody1)).rejects.toThrow(
+      'Cannot connect to the database.',
+    );
+    expect(Logger.prototype.error).toHaveBeenCalledWith(
+      'Failed to save the order: Cannot connect to the database.',
+    );
+  });
 
-  it('updateOrder: returns a not-found error if the order does not exist', async () => {});
+  it('updateOrder: updates the order successfully', async () => {
+    jest.spyOn(orderRepository, 'findOneBy').mockResolvedValue(order2);
+    jest.spyOn(orderRepository, 'merge').mockReturnValue(updatedOrder);
+    jest.spyOn(orderRepository, 'save').mockResolvedValue(updatedOrder);
 
-  it('sendOrderToWarehouse: returns an order accepted response', () => {});
+    const result = await orderService.updateOrder(
+      order2.id,
+      OrderStatus.SHIPPED,
+    );
 
-  it('sendOrderToWarehouse: returns an error when the warehouse is unreachable', () => {});
+    expect(orderRepository.findOneBy).toHaveBeenCalledWith({ id: order2.id });
+    expect(orderRepository.merge).toHaveBeenCalledWith(order2, {
+      status: OrderStatus.SHIPPED,
+    });
+    expect(orderRepository.save).toHaveBeenCalledWith(updatedOrder);
+    expect(result).toEqual(updatedOrder);
+  });
+
+  it('updateOrder: returns a not-found error if the order does not exist', async () => {
+    jest.spyOn(orderRepository, 'findOneBy').mockResolvedValue(null);
+
+    expect(orderRepository.findOneBy).toHaveBeenCalledWith({ id: order2.id });
+    await expect(
+      orderService.updateOrder(order2.id, OrderStatus.ACCEPTED),
+    ).rejects.toThrow(
+      new NotFoundException(`Order with the id ${order2.id} not found.`),
+    );
+    expect(Logger.prototype.error).toHaveBeenCalledWith(
+      `Order with the id ${order2.id} not found.`,
+    );
+  });
+
+  it('sendNewOrderToWarehouse: returns an order accepted response', () => {});
+
+  it('sendNewOrderToWarehouse: returns an error when the warehouse is unreachable', () => {});
 });

@@ -1,5 +1,6 @@
 import { OrderStatus } from '../enum/order-status.enum';
 import { OrderItem } from './order-item.interface';
+import { ShippingAddress } from './shipping-address.interface';
 
 export interface OrderResponse {
   id: string;
@@ -8,6 +9,7 @@ export interface OrderResponse {
   userId: string;
   status: OrderStatus;
   amount: number;
-  transactionId: string;
+  shippingMethod: string;
+  shippingAddress: ShippingAddress;
   items: OrderItem[];
 }
