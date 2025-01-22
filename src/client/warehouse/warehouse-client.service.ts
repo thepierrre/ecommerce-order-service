@@ -21,7 +21,7 @@ export class WarehouseClientService {
 
   constructor(private readonly httpService: HttpService) {}
 
-  async sendOrderToWarehouse(
+  async sendNewOrderToWarehouse(
     order: Order,
   ): Promise<
     | OrderAcceptedResponse

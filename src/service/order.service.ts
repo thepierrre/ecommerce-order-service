@@ -37,7 +37,7 @@ export class OrderService {
     }
   }
 
-  async updateOrder(orderId: string, orderStatus: OrderStatus): Promise<Order> {
+  async updateOrder(orderId: string, orderStatus: OrderStatus): Promise<void> {
     const existingOrder = await this.orderRepository.findOneBy({ id: orderId });
     if (!existingOrder) {
       this.logger.error(`Order with the id ${orderId} not found.`);
@@ -47,7 +47,7 @@ export class OrderService {
     const updatedOrder = this.orderRepository.merge(existingOrder, {
       status: orderStatus,
     });
-    return await this.orderRepository.save(updatedOrder);
+    await this.orderRepository.save(updatedOrder);
   }
 
   async sendNewOrderToWarehouse(
@@ -59,25 +59,46 @@ export class OrderService {
     | OrderRejectedResponse
     | WarehouseNotReadyResponse
   > {
+    let warehouseResponse:
+      | OrderAcceptedResponse
+      | OrderScheduledResponse
+      | OrderPartiallyAcceptedResponse
+      | OrderRejectedResponse
+      | WarehouseNotReadyResponse;
+
+    // Send the new order to the warehouse.
     try {
-      const warehouseResponse =
-        await this.warehouseClientService.sendOrderToWarehouse(order);
-
-      await this.updateOrder(order.id, warehouseResponse.status);
-
-      return warehouseResponse;
-    } catch (error) {
+      warehouseResponse =
+        await this.warehouseClientService.sendNewOrderToWarehouse(order);
+    } catch (warehouseError) {
       this.logger.error(
-        `Failed to send order to sendOrderToWarehouse: ${error.message}`,
+        `Failed to send the order to the warehouse: ${warehouseError.message}`,
       );
-
-      await this.updateOrder(
-        order.id,
-        OrderStatus.WAREHOUSE_SERVICE_UNAVAILABLE,
-      );
-
-      throw error;
+      // Update the status order as WAREHOUSE_SERVICE_UNAVAILABLE if the warehouse is unreachable.
+      try {
+        await this.updateOrder(
+          order.id,
+          OrderStatus.WAREHOUSE_SERVICE_UNAVAILABLE,
+        );
+      } catch (updateError) {
+        this.logger.error(
+          `Failed to update the status of the order as WAREHOUSE_SERVICE_UNAVAILABLE: ${updateError.message}`,
+        );
+      }
+      throw warehouseError;
     }
+
+    // Update the order status from the order response if the warehouse responds.
+    try {
+      await this.updateOrder(order.id, warehouseResponse.status);
+    } catch (updateError) {
+      this.logger.error(
+        `Successfuly sent the order to the warehouse, but failed to update the order in the database: ${updateError.message}`,
+      );
+      throw updateError;
+    }
+
+    return warehouseResponse;
   }
 
   async createOrderAndSendToWarehouse(

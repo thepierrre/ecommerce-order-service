@@ -9,6 +9,7 @@ import { OrderStatus } from '../model/enum/order-status.enum';
 import {
   order1,
   order2,
+  orderAcceptedResponse,
   orderRequestBody1,
   updatedOrder,
 } from '../../test/util/service/order-service.mocks';
@@ -20,7 +21,7 @@ describe('OrderService', () => {
   let orderRepository: Repository<Order>;
 
   const mockWareHouseClientService = {
-    sendOrderToWarehouse: jest.fn(),
+    sendNewOrderToWarehouse: jest.fn(),
   };
 
   const mockOrderRepository = {
@@ -113,17 +114,13 @@ describe('OrderService', () => {
     jest.spyOn(orderRepository, 'merge').mockReturnValue(updatedOrder);
     jest.spyOn(orderRepository, 'save').mockResolvedValue(updatedOrder);
 
-    const result = await orderService.updateOrder(
-      order2.id,
-      OrderStatus.SHIPPED,
-    );
+    await orderService.updateOrder(order2.id, OrderStatus.SHIPPED);
 
     expect(orderRepository.findOneBy).toHaveBeenCalledWith({ id: order2.id });
     expect(orderRepository.merge).toHaveBeenCalledWith(order2, {
       status: OrderStatus.SHIPPED,
     });
     expect(orderRepository.save).toHaveBeenCalledWith(updatedOrder);
-    expect(result).toEqual(updatedOrder);
   });
 
   it('updateOrder: returns a not-found error if the order does not exist', async () => {
@@ -140,7 +137,37 @@ describe('OrderService', () => {
     );
   });
 
-  it('sendNewOrderToWarehouse: returns an order accepted response', () => {});
+  it('sendNewOrderToWarehouse: returns an order accepted response', async () => {
+    jest
+      .spyOn(warehouseClientService, 'sendNewOrderToWarehouse')
+      .mockResolvedValue(orderAcceptedResponse);
 
-  it('sendNewOrderToWarehouse: returns an error when the warehouse is unreachable', () => {});
+    jest.spyOn(orderService, 'updateOrder').mockResolvedValue();
+
+    const response = await orderService.sendNewOrderToWarehouse(order1);
+
+    expect(warehouseClientService.sendNewOrderToWarehouse).toHaveBeenCalledWith(
+      order1,
+    );
+    expect(response).toEqual(orderAcceptedResponse);
+  });
+
+  it('sendNewOrderToWarehouse: returns an error when the warehouse is unreachable', async () => {
+    jest
+      .spyOn(warehouseClientService, 'sendNewOrderToWarehouse')
+      .mockRejectedValue(
+        new Error(
+          'ServiceUnavailableException: Unable to reach the warehouse service.',
+        ),
+      );
+
+    await expect(orderService.sendNewOrderToWarehouse(order1)).rejects.toThrow(
+      'ServiceUnavailableException: Unable to reach the warehouse service.',
+    );
+
+    expect(Logger.prototype.error).toHaveBeenCalledWith(
+      'Failed to send the order to the warehouse: ServiceUnavailableException: ' +
+        'Unable to reach the warehouse service.',
+    );
+  });
 });
