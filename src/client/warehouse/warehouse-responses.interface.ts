@@ -1,5 +1,12 @@
 import { OrderStatus } from '../../model/enum/order-status.enum';
 
+export type WarehouseResponse =
+  | OrderAcceptedResponse
+  | OrderScheduledResponse
+  | OrderPartiallyAcceptedResponse
+  | OrderRejectedResponse
+  | WarehouseNotReadyResponse;
+
 interface AcceptedItem {
   productId: string;
   quantity: number;
@@ -46,13 +53,6 @@ export interface OrderRejectedResponse {
 export interface WarehouseNotReadyResponse {
   message: 'Warehouse not ready.';
   status: OrderStatus.WAREHOUSE_NOT_READY;
-  orderId: string;
-  reason: string;
-}
-
-export interface WarehouseServiceUnavailableResponse {
-  message: 'Warehouse service unavailable.';
-  status: OrderStatus.WAREHOUSE_SERVICE_UNAVAILABLE;
   orderId: string;
   reason: string;
 }
