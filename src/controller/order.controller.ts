@@ -1,15 +1,18 @@
-import { Body, Controller, HttpStatus, Patch, Post, Res } from '@nestjs/common';
-import { OrderService } from '../service/order.service';
 import {
-  OrderAcceptedResponse,
-  OrderPartiallyAcceptedResponse,
-  OrderRejectedResponse,
-  OrderScheduledResponse,
-  WarehouseNotReadyResponse,
-} from '../client/warehouse/warehouse-responses.interface';
+  Body,
+  Controller,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Res,
+} from '@nestjs/common';
+import { OrderService } from '../service/order.service';
+import { WarehouseResponse } from '../client/warehouse/warehouse-responses.interface';
 import { OrderRequest } from '../model/interface/order-request.interface';
 import { Response } from 'express';
-import { OrderStatus } from '../model/enum/order-status.enum';
+import { OrderUpdateRequest } from '../client/notification/interface/order-update-request.interface';
+import { OrderReturn } from '../model/interface/order-return.interface';
 
 @Controller()
 export class OrderController {
@@ -20,15 +23,7 @@ export class OrderController {
   create(
     @Body() orderRequest: OrderRequest,
     @Res() response: Response,
-  ):
-    | Promise<
-        | OrderAcceptedResponse
-        | OrderScheduledResponse
-        | OrderPartiallyAcceptedResponse
-        | OrderRejectedResponse
-        | WarehouseNotReadyResponse
-      >
-    | string {
+  ): Promise<WarehouseResponse> | string {
     try {
       return this.orderService.createOrderAndSendToWarehouse(orderRequest);
     } catch {
@@ -41,9 +36,19 @@ export class OrderController {
   // Incoming from the warehouse application.
   @Patch('orders/:id')
   async updateOrder(
-    @Body() orderRequest: { id: string; status: OrderStatus },
+    @Param('id') id: string,
+    @Body() orderUpdateRequest: OrderUpdateRequest,
   ): Promise<void> {
-    const { id, status } = orderRequest;
-    await this.orderService.updateOrder(id, status);
+    const orderUpdate = { ...orderUpdateRequest, id };
+    await this.orderService.updateOrder(orderUpdate);
+  }
+
+  // Incoming from the user application.
+  @Patch('orders/:id/return')
+  async createReturn(
+    @Param('id') id: string,
+    @Body() orderReturn: OrderReturn,
+  ): Promise<void> {
+    await this.orderService.createReturn(orderReturn);
   }
 }

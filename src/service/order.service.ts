@@ -3,15 +3,11 @@ import { OrderRequest } from '../model/interface/order-request.interface';
 import { WarehouseClientService } from '../client/warehouse/warehouse-client.service';
 import { Repository } from 'typeorm';
 import { Order } from '../model/entity/order.entity';
-import {
-  OrderAcceptedResponse,
-  OrderPartiallyAcceptedResponse,
-  OrderRejectedResponse,
-  OrderScheduledResponse,
-  WarehouseNotReadyResponse,
-} from '../client/warehouse/warehouse-responses.interface';
+import { WarehouseResponse } from '../client/warehouse/warehouse-responses.interface';
 import { OrderStatus } from '../model/enum/order-status.enum';
 import { InjectRepository } from '@nestjs/typeorm';
+import { OrderReturn } from '../model/interface/order-return.interface';
+import { OrderUpdateRequest } from '../client/notification/interface/order-update-request.interface';
 
 @Injectable()
 export class OrderService {
@@ -22,6 +18,10 @@ export class OrderService {
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
   ) {}
+
+  async createReturn(orderReturn: OrderReturn): Promise<void> {
+    await this.warehouseClientService.createReturn(orderReturn);
+  }
 
   async createOrder(orderRequest: OrderRequest): Promise<Order> {
     try {
@@ -37,8 +37,11 @@ export class OrderService {
     }
   }
 
-  async updateOrder(orderId: string, orderStatus: OrderStatus): Promise<void> {
-    const existingOrder = await this.orderRepository.findOneBy({ id: orderId });
+  async updateOrder(orderUpdate: OrderUpdateRequest): Promise<void> {
+    const { orderId, orderStatus } = orderUpdate;
+    const existingOrder = await this.orderRepository.findOneBy({
+      id: orderId,
+    });
     if (!existingOrder) {
       this.logger.error(`Order with the id ${orderId} not found.`);
       throw new NotFoundException(`Order with the id ${orderId} not found.`);
@@ -50,21 +53,8 @@ export class OrderService {
     await this.orderRepository.save(updatedOrder);
   }
 
-  async sendNewOrderToWarehouse(
-    order: Order,
-  ): Promise<
-    | OrderAcceptedResponse
-    | OrderScheduledResponse
-    | OrderPartiallyAcceptedResponse
-    | OrderRejectedResponse
-    | WarehouseNotReadyResponse
-  > {
-    let warehouseResponse:
-      | OrderAcceptedResponse
-      | OrderScheduledResponse
-      | OrderPartiallyAcceptedResponse
-      | OrderRejectedResponse
-      | WarehouseNotReadyResponse;
+  async sendNewOrderToWarehouse(order: Order): Promise<WarehouseResponse> {
+    let warehouseResponse: WarehouseResponse;
 
     // Send the new order to the warehouse.
     try {
@@ -76,10 +66,10 @@ export class OrderService {
       );
       // Update the status order as WAREHOUSE_SERVICE_UNAVAILABLE if the warehouse is unreachable.
       try {
-        await this.updateOrder(
-          order.id,
-          OrderStatus.WAREHOUSE_SERVICE_UNAVAILABLE,
-        );
+        await this.updateOrder({
+          orderId: order.id,
+          orderStatus: OrderStatus.WAREHOUSE_SERVICE_UNAVAILABLE,
+        } as OrderUpdateRequest);
       } catch (updateError) {
         this.logger.error(
           `Failed to update the status of the order as WAREHOUSE_SERVICE_UNAVAILABLE: ${updateError.message}`,
@@ -90,7 +80,10 @@ export class OrderService {
 
     // Update the order status from the order response if the warehouse responds.
     try {
-      await this.updateOrder(order.id, warehouseResponse.status);
+      await this.updateOrder({
+        orderId: order.id,
+        orderStatus: warehouseResponse.status,
+      } as OrderUpdateRequest);
     } catch (updateError) {
       this.logger.error(
         `Successfuly sent the order to the warehouse, but failed to update the order in the database: ${updateError.message}`,
@@ -103,13 +96,7 @@ export class OrderService {
 
   async createOrderAndSendToWarehouse(
     orderRequest: OrderRequest,
-  ): Promise<
-    | OrderAcceptedResponse
-    | OrderScheduledResponse
-    | OrderPartiallyAcceptedResponse
-    | OrderRejectedResponse
-    | WarehouseNotReadyResponse
-  > {
+  ): Promise<WarehouseResponse> {
     const order = await this.createOrder(orderRequest);
     return await this.sendNewOrderToWarehouse(order);
   }

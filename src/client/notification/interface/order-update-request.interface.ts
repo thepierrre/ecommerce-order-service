@@ -1,7 +1,7 @@
 import { OrderStatus } from '../../../model/enum/order-status.enum';
 
 export interface OrderUpdateRequest {
-  orderId: string;
+  orderId?: string;
   orderStatus?: OrderStatus;
   message?: string;
 }
