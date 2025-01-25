@@ -69,7 +69,7 @@ describe('OrderService', () => {
           id: order1.id,
           createdAt: order1.createdAt,
           lastUpdatedAt: null,
-          status: OrderStatus.PENDING,
+          status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
         }) as Order,
     );
 
@@ -83,7 +83,7 @@ describe('OrderService', () => {
 
     expect(orderRepository.create).toHaveBeenCalledWith({
       ...orderRequestBody1,
-      status: OrderStatus.PENDING,
+      status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
     });
 
     expect(orderRepository.save).toHaveBeenCalledWith(

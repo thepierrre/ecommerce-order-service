@@ -57,7 +57,7 @@ export const order1: Order = {
   createdAt: createdAt1,
   lastUpdatedAt: null,
   userId: userId1,
-  status: OrderStatus.PENDING,
+  status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
   amount: 177.99,
   shippingMethod: 'express',
   shippingAddress: {
@@ -91,7 +91,7 @@ export const order2: Order = {
   createdAt: createdAt2,
   lastUpdatedAt: null,
   userId: userId2,
-  status: OrderStatus.PENDING,
+  status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
   amount: 50.99,
   shippingMethod: 'traditional',
   shippingAddress: {
