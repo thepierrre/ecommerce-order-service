@@ -20,14 +20,19 @@ export class OrderService {
   ) {}
 
   async createReturn(orderReturn: OrderReturn): Promise<void> {
+    const orderUpdate: OrderUpdateRequest = {
+      orderId: orderReturn.orderId,
+      orderStatus: OrderStatus.RETURN_INITIATED,
+    };
+    await this.updateOrder(orderUpdate);
     await this.warehouseClientService.createReturn(orderReturn);
   }
 
   async createOrder(orderRequest: OrderRequest): Promise<Order> {
     try {
-      const newOrder = this.orderRepository.create({
+      const newOrder: Order = this.orderRepository.create({
         ...orderRequest,
-        status: OrderStatus.PENDING,
+        status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
       });
       return await this.orderRepository.save(newOrder);
     } catch (error) {
@@ -39,7 +44,7 @@ export class OrderService {
 
   async updateOrder(orderUpdate: OrderUpdateRequest): Promise<void> {
     const { orderId, orderStatus } = orderUpdate;
-    const existingOrder = await this.orderRepository.findOneBy({
+    const existingOrder: Order = await this.orderRepository.findOneBy({
       id: orderId,
     });
     if (!existingOrder) {
