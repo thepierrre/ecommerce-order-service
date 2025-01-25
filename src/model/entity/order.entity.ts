@@ -14,6 +14,9 @@ export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column()
+  isPaid: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -23,7 +26,11 @@ export class Order {
   @Column()
   userId: string;
 
-  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: OrderStatus,
+    default: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
+  })
   status: OrderStatus;
 
   @Column('decimal', { precision: 10, scale: 2 })
