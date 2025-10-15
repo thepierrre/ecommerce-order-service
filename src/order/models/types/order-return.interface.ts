@@ -1,5 +1,5 @@
 import { ReturnedItem } from './returned-item.interface';
-import { RefundMethod } from '../enum/refund-option.enum';
+import { RefundMethod } from '../enums/refund-option.enum';
 
 export interface OrderReturn {
   orderId: string;

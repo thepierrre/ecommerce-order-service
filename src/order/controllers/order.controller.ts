@@ -7,20 +7,20 @@ import {
   Post,
   Res,
 } from '@nestjs/common';
-import { OrderService } from '../service/order.service';
-import { WarehouseResponse } from '../client/warehouse/warehouse-responses.interface';
-import { OrderRequest } from '../model/interface/order-request.interface';
+import { OrderService } from '../services/order.service';
+import { WarehouseResponse } from '../../clients/warehouse/warehouse-responses.interface';
+import { OrderRequest } from '../models/types/order-request.interface';
 import { Response } from 'express';
-import { OrderUpdateRequest } from '../client/notification/interface/order-update-request.interface';
-import { OrderReturn } from '../model/interface/order-return.interface';
+import { OrderUpdateRequest } from '../../clients/notification/types/order-update-request.interface';
+import { OrderReturn } from '../models/types/order-return.interface';
 
 @Controller()
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  // Incoming from the user application.
+  // Incoming from the User Service.
   @Post('orders')
-  create(
+  createOrder(
     @Body() orderRequest: OrderRequest,
     @Res() response: Response,
   ): Promise<WarehouseResponse> | string {
@@ -33,7 +33,7 @@ export class OrderController {
     }
   }
 
-  // Incoming from the warehouse application.
+  // Incoming from the Warehouse Service.
   @Patch('orders/:id')
   async updateOrder(
     @Param('id') id: string,
@@ -43,7 +43,7 @@ export class OrderController {
     await this.orderService.updateOrder(orderUpdate);
   }
 
-  // Incoming from the user application.
+  // Incoming from the User Service.
   @Patch('orders/:id/return')
   async createReturn(
     @Param('id') id: string,

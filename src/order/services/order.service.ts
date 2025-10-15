@@ -1,13 +1,13 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { OrderRequest } from '../model/interface/order-request.interface';
-import { WarehouseClientService } from '../client/warehouse/warehouse-client.service';
+import { OrderRequest } from '../models/types/order-request.interface';
+import { WarehouseClientService } from '../../clients/warehouse/warehouse-client.service';
 import { Repository } from 'typeorm';
-import { Order } from '../model/entity/order.entity';
-import { WarehouseResponse } from '../client/warehouse/warehouse-responses.interface';
-import { OrderStatus } from '../model/enum/order-status.enum';
+import { Order } from '../models/entities/order.entity';
+import { WarehouseResponse } from '../../clients/warehouse/warehouse-responses.interface';
+import { OrderStatus } from '../models/enums/order-status.enum';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OrderReturn } from '../model/interface/order-return.interface';
-import { OrderUpdateRequest } from '../client/notification/interface/order-update-request.interface';
+import { OrderReturn } from '../models/types/order-return.interface';
+import { OrderUpdateRequest } from '../../clients/notification/types/order-update-request.interface';
 
 @Injectable()
 export class OrderService {

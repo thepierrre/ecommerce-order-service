@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { externalApiUrls } from '../../config/external-api-urls';
-import { OrderUpdateRequest } from './interface/order-update-request.interface';
+import { OrderUpdateRequest } from './types/order-update-request.interface';
 
 @Injectable()
 export class NotificationClientService {

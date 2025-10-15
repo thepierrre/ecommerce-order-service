@@ -1,18 +1,18 @@
 import { OrderService } from './order.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { WarehouseClientService } from '../client/warehouse/warehouse-client.service';
+import { WarehouseClientService } from '../../clients/warehouse/warehouse-client.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Order } from '../model/entity/order.entity';
+import { Order } from '../models/entities/order.entity';
 import { Repository } from 'typeorm';
-import { OrderRequest } from '../model/interface/order-request.interface';
-import { OrderStatus } from '../model/enum/order-status.enum';
+import { OrderRequest } from '../models/types/order-request.interface';
+import { OrderStatus } from '../models/enums/order-status.enum';
 import {
   order1,
   order2,
   orderAcceptedResponse,
   orderRequestBody1,
   updatedOrder,
-} from '../../test/util/service/order-service.mocks';
+} from '../../../test/util/service/order-service.mocks';
 import { Logger, NotFoundException } from '@nestjs/common';
 
 describe('OrderService', () => {
@@ -68,7 +68,7 @@ describe('OrderService', () => {
           ...orderRequest,
           id: order1.id,
           createdAt: order1.createdAt,
-          lastUpdatedAt: null,
+          updatedAt: null,
           status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
         }) as Order,
     );
@@ -114,7 +114,10 @@ describe('OrderService', () => {
     jest.spyOn(orderRepository, 'merge').mockReturnValue(updatedOrder);
     jest.spyOn(orderRepository, 'save').mockResolvedValue(updatedOrder);
 
-    await orderService.updateOrder(order2.id, OrderStatus.SHIPPED);
+    await orderService.updateOrder({
+      orderId: order2.id,
+      orderStatus: OrderStatus.SHIPPED,
+    });
 
     expect(orderRepository.findOneBy).toHaveBeenCalledWith({ id: order2.id });
     expect(orderRepository.merge).toHaveBeenCalledWith(order2, {
@@ -128,7 +131,10 @@ describe('OrderService', () => {
 
     expect(orderRepository.findOneBy).toHaveBeenCalledWith({ id: order2.id });
     await expect(
-      orderService.updateOrder(order2.id, OrderStatus.ACCEPTED),
+      orderService.updateOrder({
+        orderId: order2.id,
+        orderStatus: OrderStatus.ACCEPTED,
+      }),
     ).rejects.toThrow(
       new NotFoundException(`Order with the id ${order2.id} not found.`),
     );

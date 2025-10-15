@@ -1,4 +1,4 @@
-import { OrderStatus } from '../enum/order-status.enum';
+import { OrderStatus } from '../enums/order-status.enum';
 import { OrderItem } from './order-item.interface';
 import { ShippingAddress } from './shipping-address.interface';
 

@@ -5,9 +5,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { OrderStatus } from '../enum/order-status.enum';
-import { OrderItem } from '../interface/order-item.interface';
-import { ShippingAddress } from '../interface/shipping-address.interface';
+import { OrderStatus } from '../enums/order-status.enum';
+import { OrderItem } from '../types/order-item.interface';
+import { ShippingAddress } from '../types/shipping-address.interface';
 
 @Entity()
 export class Order {
@@ -21,7 +21,7 @@ export class Order {
   createdAt: Date;
 
   @UpdateDateColumn({ nullable: true })
-  lastUpdatedAt: Date;
+  updatedAt: Date;
 
   @Column()
   userId: string;

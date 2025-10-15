@@ -1,4 +1,4 @@
-import { ReturnReason } from '../enum/return-reason.enum';
+import { ReturnReason } from '../enums/return-reason.enum';
 
 export interface ReturnedItem {
   productId: string;

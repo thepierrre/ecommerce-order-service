@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { Order } from '../../model/entity/order.entity';
+import { Order } from '../../order/models/entities/order.entity';
 import { externalApiUrls } from '../../config/external-api-urls';
 import { WarehouseResponse } from './warehouse-responses.interface';
 import { firstValueFrom } from 'rxjs';
-import { OrderReturn } from '../../model/interface/order-return.interface';
+import { OrderReturn } from '../../order/models/types/order-return.interface';
 
 @Injectable()
 export class WarehouseClientService {
