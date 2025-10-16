@@ -1,54 +1,61 @@
 import {
-  Body,
-  Controller,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Res,
-} from '@nestjs/common';
-import { OrderService } from '../services/order.service';
-import { WarehouseResponse } from '../../clients/warehouse/warehouse-responses.interface';
-import { OrderRequest } from '../models/types/order-request.interface';
-import { Response } from 'express';
-import { OrderUpdateRequest } from '../../clients/notification/types/order-update-request.interface';
-import { OrderReturn } from '../models/types/order-return.interface';
+	Body,
+	Controller,
+	Get,
+	HttpCode,
+	HttpStatus,
+	Param,
+	Patch,
+	Post,
+	Res,
+} from "@nestjs/common";
+import type { Response } from "express";
+import { OrderUpdateRequest } from "../../clients/notification/types/order-update-request.interface";
+import { WarehouseResponse } from "../../clients/warehouse/warehouse-responses.interface";
+import type { CreateOrderDto } from "../models/dtos/create-order.dto";
+import { OrderResponseDto } from "../models/dtos/order-response.dto";
+import { OrderRequest } from "../models/types/order-request.interface";
+import { OrderReturn } from "../models/types/order-return.interface";
+import type { OrderService } from "../services/order.service";
 
 @Controller()
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+	constructor(private readonly orderService: OrderService) {}
 
-  // Incoming from the User Service.
-  @Post('orders')
-  createOrder(
-    @Body() orderRequest: OrderRequest,
-    @Res() response: Response,
-  ): Promise<WarehouseResponse> | string {
-    try {
-      return this.orderService.createOrderAndSendToWarehouse(orderRequest);
-    } catch {
-      response
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .send('Failed to create the order.');
-    }
-  }
+	// Incoming from the User Service.
+	@Post("orders")
+	@HttpCode(201)
+	async create(
+		@Body() dto: CreateOrderDto,
+		@Res({ passthrough: true }) res: Response,
+	): Promise<OrderResponseDto> {
+		const order = await this.orderService.create(dto);
 
-  // Incoming from the Warehouse Service.
-  @Patch('orders/:id')
-  async updateOrder(
-    @Param('id') id: string,
-    @Body() orderUpdateRequest: OrderUpdateRequest,
-  ): Promise<void> {
-    const orderUpdate = { ...orderUpdateRequest, id };
-    await this.orderService.updateOrder(orderUpdate);
-  }
+		res.location(`/orders/${order.id}`);
+		return new OrderResponseDto(order);
+	}
 
-  // Incoming from the User Service.
-  @Patch('orders/:id/return')
-  async createReturn(
-    @Param('id') id: string,
-    @Body() orderReturn: OrderReturn,
-  ): Promise<void> {
-    await this.orderService.createReturn(orderReturn);
-  }
+	@Get("orders/:id")
+	async findById(@Param("id") id: string): Promise<OrderResponseDto> {
+		return await this.orderService.findById(id);
+	}
+
+	// Incoming from the Warehouse Service.
+	// @Patch('orders/:id')
+	// async updateOrder(
+	//   @Param('id') id: string,
+	//   @Body() orderUpdateRequest: OrderUpdateRequest,
+	// ): Promise<void> {
+	//   const orderUpdate = { ...orderUpdateRequest, id };
+	//   await this.orderService.updateOrder(orderUpdate);
+	// }
+
+	// Incoming from the User Service.
+	// @Patch('orders/:id/return')
+	// async createReturn(
+	//   @Param('id') id: string,
+	//   @Body() orderReturn: OrderReturn,
+	// ): Promise<void> {
+	//   await this.orderService.createReturn(orderReturn);
+	// }
 }

@@ -42,7 +42,7 @@ export const orderRequestBody2: OrderRequest = {
   userId: userId2,
   shippingAddress: {
     line1: 'Spaghetti Lane 225',
-    city: 'Nonsense Valley',
+     city: 'Nonsense Valley',
     stateOrProvince: 'Weird Hills',
     zipCode: '5433300',
     country: 'Republic of Confusion',

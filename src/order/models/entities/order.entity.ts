@@ -1,47 +1,46 @@
 import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import { OrderStatus } from '../enums/order-status.enum';
-import { OrderItem } from '../types/order-item.interface';
-import { ShippingAddress } from '../types/shipping-address.interface';
+	Column,
+	CreateDateColumn,
+	Entity,
+	PrimaryGeneratedColumn,
+	UpdateDateColumn,
+} from "typeorm";
+import { OrderStatus } from "../enums/order-status.enum";
+import { OrderItem } from "../types/order-item.interface";
 
 @Entity()
 export class Order {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+	@PrimaryGeneratedColumn("uuid")
+	id: string;
 
-  @Column()
-  isPaid: boolean;
+	@Column()
+	userId: string;
 
-  @CreateDateColumn()
-  createdAt: Date;
+	@Column()
+	isPaid: boolean;
 
-  @UpdateDateColumn({ nullable: true })
-  updatedAt: Date;
+	@CreateDateColumn()
+	createdAt: Date;
 
-  @Column()
-  userId: string;
+	@UpdateDateColumn({ nullable: true })
+	updatedAt: Date;
 
-  @Column({
-    type: 'enum',
-    enum: OrderStatus,
-    default: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
-  })
-  status: OrderStatus;
+	@Column({
+		type: "enum",
+		enum: OrderStatus,
+		default: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
+	})
+	status: OrderStatus;
 
-  @Column('decimal', { precision: 10, scale: 2 })
-  amount: number;
+	@Column("decimal", { precision: 10, scale: 2 })
+	amount: number;
 
-  @Column()
-  shippingMethod: string;
+	@Column()
+	shippingMethod: string;
 
-  @Column()
-  shippingAddress: ShippingAddress;
+	@Column()
+	shippingAddress: string;
 
-  @Column('json')
-  items: OrderItem[];
+	@Column("json")
+	items: OrderItem[];
 }
