@@ -8,7 +8,7 @@ import { OrderStatus } from "../models/enums/order-status.enum";
 import { InjectRepository } from "@nestjs/typeorm";
 import { OrderReturn } from "../models/types/order-return.interface";
 import { OrderUpdateRequest } from "../../clients/notification/types/order-update-request.interface";
-import { CreateOrderDto } from "../models/dtos/create-order.dto";
+import { CreateOrderSchema } from "../models/schemas/create-order.schema";
 import { ClientProxy } from "@nestjs/microservices";
 
 @Injectable()
@@ -24,7 +24,7 @@ export class OrderService {
 		private readonly client: ClientProxy,
 	) {}
 
-	async create(dto: CreateOrderDto): Promise<Order> {
+	async create(dto: CreateOrderSchema): Promise<Order> {
 		try {
 			const newOrder: Order = this.orderRepository.create({
 				...dto,

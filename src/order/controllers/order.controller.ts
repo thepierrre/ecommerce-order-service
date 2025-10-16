@@ -8,15 +8,23 @@ import {
 	Patch,
 	Post,
 	Res,
+	UsePipes,
 } from "@nestjs/common";
 import type { Response } from "express";
 import { OrderUpdateRequest } from "../../clients/notification/types/order-update-request.interface";
 import { WarehouseResponse } from "../../clients/warehouse/warehouse-responses.interface";
-import type { CreateOrderDto } from "../models/dtos/create-order.dto";
-import { OrderResponseDto } from "../models/dtos/order-response.dto";
+import {
+	CreateOrderDto,
+	CreateOrderSchema,
+} from "../models/schemas/create-order.schema";
+import {
+	CreateOrderResponse,
+	CreateOrderResponseSchema,
+} from "../models/schemas/create-order-response.schema";
 import { OrderRequest } from "../models/types/order-request.interface";
 import { OrderReturn } from "../models/types/order-return.interface";
 import type { OrderService } from "../services/order.service";
+import { ZodValidationPipe } from "../pipes/zod-validation.pipe";
 
 @Controller()
 export class OrderController {
@@ -25,18 +33,19 @@ export class OrderController {
 	// Incoming from the User Service.
 	@Post("orders")
 	@HttpCode(201)
+	@UsePipes(new ZodValidationPipe(CreateOrderSchema))
 	async create(
 		@Body() dto: CreateOrderDto,
 		@Res({ passthrough: true }) res: Response,
-	): Promise<OrderResponseDto> {
+	): Promise<CreateOrderResponse> {
 		const order = await this.orderService.create(dto);
 
 		res.location(`/orders/${order.id}`);
-		return new OrderResponseDto(order);
+		return order;
 	}
 
 	@Get("orders/:id")
-	async findById(@Param("id") id: string): Promise<OrderResponseDto> {
+	async findById(@Param("id") id: string): Promise<CreateOrderResponseSchema> {
 		return await this.orderService.findById(id);
 	}
 
