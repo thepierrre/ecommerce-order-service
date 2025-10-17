@@ -133,7 +133,7 @@ describe("OrderService", () => {
 		await expect(
 			orderService.updateOrder({
 				orderId: order2.id,
-				orderStatus: OrderStatus.ACCEPTED,
+				orderStatus: OrderStatus.PROCESSING_BY_WAREHOUSE,
 			}),
 		).rejects.toThrow(
 			new NotFoundException(`Order with the id ${order2.id} not found.`),

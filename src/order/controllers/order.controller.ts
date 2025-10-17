@@ -14,7 +14,7 @@ import type { Response } from "express";
 import { OrderUpdateRequest } from "../../clients/notification/types/order-update-request.interface";
 import { WarehouseResponse } from "../../clients/warehouse/warehouse-responses.interface";
 import {
-	CreateOrderDto,
+	CreateOrder,
 	CreateOrderSchema,
 } from "../models/schemas/create-order.schema";
 import {
@@ -35,7 +35,7 @@ export class OrderController {
 	@HttpCode(201)
 	@UsePipes(new ZodValidationPipe(CreateOrderSchema))
 	async create(
-		@Body() dto: CreateOrderDto,
+		@Body() dto: CreateOrder,
 		@Res({ passthrough: true }) res: Response,
 	): Promise<CreateOrderResponse> {
 		const order = await this.orderService.create(dto);

@@ -17,7 +17,7 @@ export class Order {
 	userId: string;
 
 	@Column()
-	isPaid: boolean;
+	contactEmail: string;
 
 	@CreateDateColumn()
 	createdAt: Date;
