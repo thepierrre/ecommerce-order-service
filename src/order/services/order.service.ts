@@ -1,24 +1,35 @@
-import { Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { OrderRequest } from "../models/types/order-request.interface";
+import {
+	Inject,
+	Injectable,
+	InternalServerErrorException,
+	Logger,
+	NotFoundException,
+	PreconditionFailedException,
+} from "@nestjs/common";
+
 import { WarehouseClientService } from "../../clients/warehouse/warehouse-client.service";
 import { Repository } from "typeorm";
 import { Order } from "../models/entities/order.entity";
-import { WarehouseResponse } from "../../clients/warehouse/warehouse-responses.interface";
 import { OrderStatus } from "../models/enums/order-status.enum";
 import { InjectRepository } from "@nestjs/typeorm";
 import { OrderReturn } from "../models/types/order-return.interface";
 import { OrderUpdateRequest } from "../../clients/notification/types/order-update-request.interface";
-import {
-	CreateOrder,
-	CreateOrderSchema,
-} from "../models/schemas/create-order.schema";
+import { CreateOrder } from "../models/schemas/create-order.schema";
 import { ClientProxy } from "@nestjs/microservices";
-import { OrderPublic, toOrderPublic } from "../models/schemas/order.public";
+import {
+	OrderPublicResponse,
+	toOrderPublicResponse,
+} from "../models/schemas/order-public-response.schema";
 import {
 	ORDER_CREATED_SUBJECT,
 	toOrderCreatedV1,
 } from "../../contracts/orders/order-created-v1.schema";
-import { OrderInternal, toOrderInternal } from '../models/schemas/order.internal';
+import {
+	OrderInternalResponse,
+	toOrderInternalResponse,
+} from "../models/schemas/order-internal-response.schema";
+import { UpdateOrder } from "../models/schemas/update-order.schema";
+import { makeETag } from "../utils/make-etag";
 
 @Injectable()
 export class OrderService {
@@ -33,7 +44,7 @@ export class OrderService {
 		private readonly nats: ClientProxy,
 	) {}
 
-	async create(dto: CreateOrder): Promise<OrderPublic> {
+	async create(dto: CreateOrder): Promise<OrderPublicResponse> {
 		try {
 			const createOrder: Order = this.orderRepository.create({
 				...dto,
@@ -45,48 +56,65 @@ export class OrderService {
 
 			this.nats.emit(ORDER_CREATED_SUBJECT, orderCreatedEvent);
 
-			return toOrderPublic(saved);
+			return toOrderPublicResponse(saved);
 		} catch (err: unknown) {
 			const e = err as Error;
 			this.logger.error(`Failed to place the order: ${e.message}`, e.stack);
-			throw new InternalServerErrorException(`Failed to place the order: ${e.message}`);
+			throw new InternalServerErrorException(
+				`Failed to place the order: ${e.message}`,
+			);
 		}
 	}
 
-	async findByIdInternal(id: string): Promise<OrderInternal> {
+	async findByIdInternal(id: string): Promise<OrderInternalResponse> {
 		const order = await this.orderRepository.findOneBy({ id });
-		return toOrderInternal(order);
+		return toOrderInternalResponse(order);
 	}
 
-	async findByIdPublic(id: string): Promise<OrderPublic> {
+	async findByIdPublic(id: string): Promise<OrderPublicResponse> {
 		const order = await this.orderRepository.findOneBy({ id });
-		return toOrderPublic(order);
+		return toOrderPublicResponse(order);
 	}
 
-	async createReturn(orderReturn: OrderReturn): Promise<void> {
-		const orderUpdate: OrderUpdateRequest = {
-			orderId: orderReturn.orderId,
-			orderStatus: OrderStatus.RETURN_INITIATED,
+	// async createReturn(orderReturn: OrderReturn): Promise<void> {
+	// 	const orderUpdate: OrderUpdateRequest = {
+	// 		orderId: orderReturn.orderId,
+	// 		orderStatus: OrderStatus.RETURN_INITIATED,
+	// 	};
+	// 	await this.updateOrder(orderUpdate);
+	// 	await this.warehouseClientService.createReturn(orderReturn);
+	// }
+
+	async updateOrder(
+		id: string,
+		patch: UpdateOrder,
+		etag?: string,
+	): Promise<{ order: OrderPublicResponse; newEtag: string }> {
+		if (!etag) {
+			throw new PreconditionFailedException("ETag header missing.");
+		}
+
+		const existing: Order = await this.orderRepository.findOneBy({
+			id: id,
+		});
+		if (!existing) {
+			this.logger.error(`Order with the id ${id} not found.`);
+			throw new NotFoundException(`Order with the id ${id} not found.`);
+		}
+
+		const currEtag = makeETag(existing);
+		if (etag !== currEtag) {
+			throw new PreconditionFailedException("Resource has changed.");
+		}
+
+		const updated = this.orderRepository.merge(existing, patch);
+		const saved = await this.orderRepository.save(updated);
+		return {
+			order: toOrderPublicResponse(saved),
+			newEtag: makeETag({
+				createdAt: saved.createdAt,
+				updatedAt: saved.updatedAt,
+			}),
 		};
-		await this.updateOrder(orderUpdate);
-		await this.warehouseClientService.createReturn(orderReturn);
-	}
-
-
-
-	async updateOrder(orderUpdate: OrderUpdateRequest): Promise<void> {
-		const { orderId, orderStatus } = orderUpdate;
-		const existingOrder: Order = await this.orderRepository.findOneBy({
-			id: orderId,
-		});
-		if (!existingOrder) {
-			this.logger.error(`Order with the id ${orderId} not found.`);
-			throw new NotFoundException(`Order with the id ${orderId} not found.`);
-		}
-
-		const updatedOrder = this.orderRepository.merge(existingOrder, {
-			status: orderStatus,
-		});
-		await this.orderRepository.save(updatedOrder);
 	}
 }
