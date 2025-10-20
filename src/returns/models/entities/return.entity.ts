@@ -9,6 +9,7 @@ import type { OrderItem } from "../../../orders/models/types/order-item.interfac
 import { OrderStatus } from "../../../orders/models/enums/order-status.enum";
 import { ReturnStatus } from "../enums/return-status.enum";
 import { ReturnReason } from "../enums/return-reason.enum";
+import { ReturnItem } from '../schemas/return-item.schema';
 
 @Entity()
 export class Return {
@@ -16,7 +17,7 @@ export class Return {
 	id: string;
 
 	@Column()
-	order: string;
+	orderId: string;
 
 	@CreateDateColumn()
 	createdAt: Date;
@@ -41,5 +42,5 @@ export class Return {
 	reason: ReturnReason;
 
 	@Column("json")
-	items: OrderItem[];
+	items: ReturnItem[];
 }

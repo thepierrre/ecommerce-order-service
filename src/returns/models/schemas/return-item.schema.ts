@@ -5,3 +5,5 @@ export const ReturnItemSchema = z.object({
 	quantity: z.number().int().positive(),
 	reason: z.string(),
 });
+
+export type ReturnItem = z.infer<typeof ReturnItemSchema>;

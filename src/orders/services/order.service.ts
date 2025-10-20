@@ -33,17 +33,18 @@ export class OrderService {
 	private readonly logger = new Logger(OrderService.name);
 
 	constructor(
-		@InjectRepository(Order) private orderRepository: Repository<Order>,
+		@InjectRepository(Order)
+		private readonly orderRepo: Repository<Order>,
 		@Inject("NATS_SERVICE") private readonly nats: ClientProxy,
 	) {}
 
 	async create(dto: CreateOrder): Promise<OrderPublic> {
 		try {
-			const createOrder: Order = this.orderRepository.create({
+			const createOrder: Order = this.orderRepo.create({
 				...dto,
 				status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
 			});
-			const saved = await this.orderRepository.save(createOrder);
+			const saved = await this.orderRepo.save(createOrder);
 
 			const orderCreatedEvent = toOrderCreatedV1(saved);
 
@@ -60,23 +61,14 @@ export class OrderService {
 	}
 
 	async findByIdInternal(id: string): Promise<OrderInternalResponse> {
-		const order = await this.orderRepository.findOneBy({ id });
+		const order = await this.orderRepo.findOneByOrFail({ id });
 		return toOrderInternalResponse(order);
 	}
 
 	async findByIdPublic(id: string): Promise<OrderPublic> {
-		const order = await this.orderRepository.findOneBy({ id });
+		const order = await this.orderRepo.findOneByOrFail({ id });
 		return toOrderPublic(order);
 	}
-
-	// async createReturn(orderReturn: OrderReturn): Promise<void> {
-	// 	const orderUpdate: OrderUpdateRequest = {
-	// 		orderId: orderReturn.orderId,
-	// 		orderStatus: OrderStatus.RETURN_INITIATED,
-	// 	};
-	// 	await this.updateOrder(orderUpdate);
-	// 	await this.warehouseClientService.createReturn(orderReturn);
-	// }
 
 	async updateOrder(
 		id: string,
@@ -87,21 +79,21 @@ export class OrderService {
 			throw new PreconditionFailedException("ETag header missing.");
 		}
 
-		const existing: Order = await this.orderRepository.findOneBy({
+		const existing: Order = await this.orderRepo.findOneByOrFail({
 			id: id,
 		});
-		if (!existing) {
-			this.logger.error(`Order with the id ${id} not found.`);
-			throw new NotFoundException(`Order with the id ${id} not found.`);
-		}
+		// if (!existing) {
+		// 	this.logger.error(`Order with the id ${id} not found.`);
+		// 	throw new NotFoundException(`Order with the id ${id} not found.`);
+		// }
 
 		const currEtag = makeETag(existing);
 		if (etag !== currEtag) {
 			throw new PreconditionFailedException("Resource has changed.");
 		}
 
-		const updated = this.orderRepository.merge(existing, patch);
-		const saved = await this.orderRepository.save(updated);
+		const updated = this.orderRepo.merge(existing, patch);
+		const saved = await this.orderRepo.save(updated);
 		return {
 			order: toOrderPublic(saved),
 			newEtag: makeETag({

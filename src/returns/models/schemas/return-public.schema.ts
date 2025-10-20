@@ -9,4 +9,5 @@ export const ReturnPublicSchema = z.object({
 	items: z.array(ReturnItemSchema).min(1),
 	placedAt: z.iso.datetime(),
 });
+
 export type ReturnPublicResponse = z.infer<typeof ReturnPublicSchema>;

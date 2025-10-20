@@ -6,6 +6,7 @@ import { database } from "./config/database";
 import { HttpModule } from "@nestjs/axios";
 import { Order } from "./orders/models/entities/order.entity";
 import { ClientsModule, Transport } from "@nestjs/microservices";
+import { Return } from "./returns/models/entities/return.entity";
 
 @Module({
 	imports: [
@@ -25,7 +26,7 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
 			username: database.username,
 			password: database.password,
 			database: database.database,
-			entities: [Order],
+			entities: [Order, Return],
 			synchronize: true,
 		}),
 		HttpModule,
