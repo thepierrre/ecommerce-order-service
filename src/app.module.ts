@@ -4,7 +4,7 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { database } from "./config/database";
 import { HttpModule } from "@nestjs/axios";
-import { Order } from "./order/models/entities/order.entity";
+import { Order } from "./orders/models/entities/order.entity";
 import { ClientsModule, Transport } from "@nestjs/microservices";
 
 @Module({

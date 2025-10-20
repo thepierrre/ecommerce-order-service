@@ -4,7 +4,7 @@ import { WarehouseClientService } from "../../clients/warehouse/warehouse-client
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Order } from "../models/entities/order.entity";
 import { Repository } from "typeorm";
-import { OrderRequest } from "../models/types/order-request.interface";
+import { OrderRequest } from "../models/types/orders-request.interface";
 import { OrderStatus } from "../models/enums/order-status.enum";
 import {
 	order1,
@@ -61,14 +61,14 @@ describe("OrderService", () => {
 		expect(orderService).toBeDefined();
 	});
 
-	it("createOrder: returns a newly created order", async () => {
+	it("createOrder: returns a newly created orders", async () => {
 		jest.spyOn(orderRepository, "create").mockImplementation(
 			(orderRequest: OrderRequest) =>
 				({
 					...orderRequest,
 					id: order1.id,
 					createdAt: order1.createdAt,
-					updatedAt: null,
+					lastUpdatedAt: null,
 					status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
 				}) as Order,
 		);
@@ -105,11 +105,11 @@ describe("OrderService", () => {
 			"Cannot connect to the database.",
 		);
 		expect(Logger.prototype.error).toHaveBeenCalledWith(
-			"Failed to save the order: Cannot connect to the database.",
+			"Failed to save the orders: Cannot connect to the database.",
 		);
 	});
 
-	it("updateOrder: updates the order successfully", async () => {
+	it("updateOrder: updates the orders successfully", async () => {
 		jest.spyOn(orderRepository, "findOneBy").mockResolvedValue(order2);
 		jest.spyOn(orderRepository, "merge").mockReturnValue(updatedOrder);
 		jest.spyOn(orderRepository, "save").mockResolvedValue(updatedOrder);
@@ -126,7 +126,7 @@ describe("OrderService", () => {
 		expect(orderRepository.save).toHaveBeenCalledWith(updatedOrder);
 	});
 
-	it("updateOrder: returns a not-found error if the order does not exist", async () => {
+	it("updateOrder: returns a not-found error if the orders does not exist", async () => {
 		jest.spyOn(orderRepository, "findOneBy").mockResolvedValue(null);
 
 		expect(orderRepository.findOneBy).toHaveBeenCalledWith({ id: order2.id });
@@ -143,7 +143,7 @@ describe("OrderService", () => {
 		);
 	});
 
-	it("sendNewOrderToWarehouse: returns an order accepted response", async () => {
+	it("sendNewOrderToWarehouse: returns an orders accepted response", async () => {
 		jest
 			.spyOn(warehouseClientService, "sendNewOrderToWarehouse")
 			.mockResolvedValue(orderAcceptedResponse);
@@ -172,7 +172,7 @@ describe("OrderService", () => {
 		);
 
 		expect(Logger.prototype.error).toHaveBeenCalledWith(
-			"Failed to send the order to the warehouse: ServiceUnavailableException: " +
+			"Failed to send the orders to the warehouse: ServiceUnavailableException: " +
 				"Unable to reach the warehouse service.",
 		);
 	});

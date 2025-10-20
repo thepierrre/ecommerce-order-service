@@ -6,29 +6,26 @@ import {
 	NotFoundException,
 	PreconditionFailedException,
 } from "@nestjs/common";
-
-import { WarehouseClientService } from "../../clients/warehouse/warehouse-client.service";
-import { Repository } from "typeorm";
-import { Order } from "../models/entities/order.entity";
-import { OrderStatus } from "../models/enums/order-status.enum";
+import type { ClientProxy } from "@nestjs/microservices";
 import { InjectRepository } from "@nestjs/typeorm";
-import { OrderReturn } from "../models/types/order-return.interface";
-import { OrderUpdateRequest } from "../../clients/notification/types/order-update-request.interface";
-import { CreateOrder } from "../models/schemas/create-order.schema";
-import { ClientProxy } from "@nestjs/microservices";
-import {
-	OrderPublicResponse,
-	toOrderPublicResponse,
-} from "../models/schemas/order-public-response.schema";
+import type { Repository } from "typeorm";
+import type { WarehouseClientService } from "../../clients/warehouse/warehouse-client.service";
 import {
 	ORDER_CREATED_SUBJECT,
 	toOrderCreatedV1,
 } from "../../contracts/orders/order-created-v1.schema";
+import { Order } from "../models/entities/order.entity";
+import { OrderStatus } from "../models/enums/order-status.enum";
+import type { CreateOrder } from "../models/schemas/create-order.schema";
 import {
-	OrderInternalResponse,
+	type OrderInternalResponse,
 	toOrderInternalResponse,
 } from "../models/schemas/order-internal-response.schema";
-import { UpdateOrder } from "../models/schemas/update-order.schema";
+import {
+	type OrderPublic,
+	toOrderPublic,
+} from "../models/schemas/order-public-response.schema";
+import type { UpdateOrder } from "../models/schemas/update-order.schema";
 import { makeETag } from "../utils/make-etag";
 
 @Injectable()
@@ -36,15 +33,11 @@ export class OrderService {
 	private readonly logger = new Logger(OrderService.name);
 
 	constructor(
-		private readonly warehouseClientService: WarehouseClientService,
-		@InjectRepository(Order)
-		private orderRepository: Repository<Order>,
-
-		@Inject("NATS_SERVICE")
-		private readonly nats: ClientProxy,
+		@InjectRepository(Order) private orderRepository: Repository<Order>,
+		@Inject("NATS_SERVICE") private readonly nats: ClientProxy,
 	) {}
 
-	async create(dto: CreateOrder): Promise<OrderPublicResponse> {
+	async create(dto: CreateOrder): Promise<OrderPublic> {
 		try {
 			const createOrder: Order = this.orderRepository.create({
 				...dto,
@@ -56,7 +49,7 @@ export class OrderService {
 
 			this.nats.emit(ORDER_CREATED_SUBJECT, orderCreatedEvent);
 
-			return toOrderPublicResponse(saved);
+			return toOrderPublic(saved);
 		} catch (err: unknown) {
 			const e = err as Error;
 			this.logger.error(`Failed to place the order: ${e.message}`, e.stack);
@@ -71,9 +64,9 @@ export class OrderService {
 		return toOrderInternalResponse(order);
 	}
 
-	async findByIdPublic(id: string): Promise<OrderPublicResponse> {
+	async findByIdPublic(id: string): Promise<OrderPublic> {
 		const order = await this.orderRepository.findOneBy({ id });
-		return toOrderPublicResponse(order);
+		return toOrderPublic(order);
 	}
 
 	// async createReturn(orderReturn: OrderReturn): Promise<void> {
@@ -89,7 +82,7 @@ export class OrderService {
 		id: string,
 		patch: UpdateOrder,
 		etag?: string,
-	): Promise<{ order: OrderPublicResponse; newEtag: string }> {
+	): Promise<{ order: OrderPublic; newEtag: string }> {
 		if (!etag) {
 			throw new PreconditionFailedException("ETag header missing.");
 		}
@@ -110,10 +103,10 @@ export class OrderService {
 		const updated = this.orderRepository.merge(existing, patch);
 		const saved = await this.orderRepository.save(updated);
 		return {
-			order: toOrderPublicResponse(saved),
+			order: toOrderPublic(saved),
 			newEtag: makeETag({
 				createdAt: saved.createdAt,
-				updatedAt: saved.updatedAt,
+				lastUpdatedAt: saved.lastUpdatedAt,
 			}),
 		};
 	}

@@ -2,47 +2,40 @@ import {
 	Body,
 	Controller,
 	Get,
+	Headers,
 	HttpCode,
-	HttpStatus,
 	Param,
 	Patch,
 	Post,
 	Res,
 	UsePipes,
-	Headers,
 } from "@nestjs/common";
 import type { Response } from "express";
-import { OrderUpdateRequest } from "../../clients/notification/types/order-update-request.interface";
-import { WarehouseResponse } from "../../clients/warehouse/warehouse-responses.interface";
+
 import {
-	CreateOrder,
+	type CreateOrder,
 	CreateOrderSchema,
 } from "../models/schemas/create-order.schema";
-
-import type { OrderService } from "../services/order.service";
-import { ZodValidationPipe } from "../pipes/zod-validation.pipe";
-import { OrderInternalResponse } from "../models/schemas/order-internal-response.schema";
+import type { OrderInternalResponse } from "../models/schemas/order-internal-response.schema";
+import type { OrderPublic } from "../models/schemas/order-public-response.schema";
 import {
-	OrderPublicResponse,
-	toOrderPublicResponse,
-} from "../models/schemas/order-public-response.schema";
-import {
-	UpdateOrder,
+	type UpdateOrder,
 	UpdateOrderSchema,
 } from "../models/schemas/update-order.schema";
+import { ZodValidationPipe } from "../pipes/zod-validation.pipe";
+import type { OrderService } from "../services/order.service";
 
 @Controller()
 export class OrderController {
 	constructor(private readonly orderService: OrderService) {}
 
-	// Incoming from the User Service.
 	@Post("orders")
 	@HttpCode(201)
 	@UsePipes(new ZodValidationPipe(CreateOrderSchema))
 	async create(
 		@Body() dto: CreateOrder,
 		@Res({ passthrough: true }) res: Response,
-	): Promise<OrderPublicResponse> {
+	): Promise<OrderPublic> {
 		const order = await this.orderService.create(dto);
 
 		res.location(`/orders/${order.id}`);
@@ -57,7 +50,7 @@ export class OrderController {
 	}
 
 	@Get("orders/:id")
-	async findByIdPublic(@Param("id") id: string): Promise<OrderPublicResponse> {
+	async findByIdPublic(@Param("id") id: string): Promise<OrderPublic> {
 		return await this.orderService.findByIdPublic(id);
 	}
 
@@ -68,7 +61,7 @@ export class OrderController {
 		@Body() patch: UpdateOrder,
 		@Res({ passthrough: true }) res: Response,
 		@Headers("if-match") etag?: string,
-	): Promise<OrderPublicResponse> {
+	): Promise<OrderPublic> {
 		const patched = await this.orderService.updateOrder(id, patch, etag);
 
 		res.setHeader("ETag", patched.newEtag);

@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import type { Order } from "../../order/models/entities/order.entity";
-import { OrderItemSchema } from "../../order/models/schemas/order-item.schema";
+import type { Order } from "../../orders/models/entities/order.entity";
+import { OrderItemSchema } from "../../orders/models/schemas/order-item.schema";
 
 export const OrderCreatedV1Schema = z.object({
 	schemaVersion: z.literal(1),

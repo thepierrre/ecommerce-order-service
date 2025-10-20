@@ -6,7 +6,7 @@ import {
 	UpdateDateColumn,
 } from "typeorm";
 import { OrderStatus } from "../enums/order-status.enum";
-import { OrderItem } from "../types/order-item.interface";
+import type { OrderItem } from "../types/order-item.interface";
 
 @Entity()
 export class Order {
@@ -23,7 +23,7 @@ export class Order {
 	createdAt: Date;
 
 	@UpdateDateColumn({ nullable: true })
-	updatedAt: Date;
+	lastUpdatedAt: Date;
 
 	@Column({
 		type: "enum",

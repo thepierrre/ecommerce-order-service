@@ -2,8 +2,8 @@ import type { HttpService } from "@nestjs/axios";
 import { Injectable, Logger } from "@nestjs/common";
 import { firstValueFrom } from "rxjs";
 import { externalApiUrls } from "../../config/external-api-urls";
-import type { Order } from "../../order/models/entities/order.entity";
-import type { OrderReturn } from "../../order/models/types/order-return.interface";
+import type { Order } from "../../orders/models/entities/order.entity";
+import type { OrderReturn } from "../../orders/models/types/order-return.interface";
 import type { WarehouseResponse } from "./warehouse-responses.interface";
 
 @Injectable()
@@ -22,7 +22,7 @@ export class WarehouseClientService {
 			);
 		} catch (error) {
 			this.logger.error("Unable to reach the warehouse service: ", error);
-			throw new Error("Unable to send the order to the warehouse.");
+			throw new Error("Unable to send the orders to the warehouse.");
 		}
 	}
 
@@ -37,7 +37,7 @@ export class WarehouseClientService {
 			return response.data;
 		} catch (error) {
 			this.logger.error("Unable to reach the warehouse service: ", error);
-			throw new Error("Unable to send the order to the warehouse.");
+			throw new Error("Unable to send the orders to the warehouse.");
 		}
 	}
 }

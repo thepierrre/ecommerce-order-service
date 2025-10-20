@@ -9,41 +9,49 @@ export const OrderPublicSchema = z.object({
 	contactEmail: z.email(),
 	amount: z.number(),
 	placedAt: z.iso.datetime(),
-	updatedAt: z.iso.datetime().nullish(),
+	lastUpdatedAt: z.iso.datetime().nullish(),
 	status: PublicOrderStatusSchema,
 	shippingMethod: z.string(),
 	shippingAddress: z.string(),
 	items: z.array(OrderItemSchema).min(1),
 });
 
-export type OrderPublicResponse = z.infer<typeof OrderPublicSchema>;
+export type OrderPublic = z.infer<typeof OrderPublicSchema>;
 
-const toOrderPublicStatus = (s: OrderStatus): OrderPublicResponse["status"] => {
+export type OrderPublicStatus =
+	| "placed"
+	| "processing"
+	| "shipped"
+	| "delivered"
+	| "return initiated"
+	| "return completed";
+
+const toOrderPublicStatus = (s: OrderStatus): OrderPublicStatus => {
 	switch (s) {
 		case OrderStatus.PENDING_WAREHOUSE_RESPONSE:
 		case OrderStatus.WAREHOUSE_NOT_READY:
-			return "Placed";
+			return "placed";
 		case OrderStatus.PROCESSING_BY_WAREHOUSE:
-			return "Processing";
+			return "processing";
 		case OrderStatus.SHIPPED:
-			return "Shipped";
+			return "shipped";
 		case OrderStatus.DELIVERED:
-			return "Delivered";
+			return "delivered";
 		case OrderStatus.RETURN_INITIATED:
-			return "Return initiated";
+			return "return initiated";
 		case OrderStatus.RETURNED:
 		case OrderStatus.REFUNDED:
-			return "Return completed";
+			return "return completed";
 	}
 };
 
-export const toOrderPublicResponse = (o: Order): OrderPublicResponse =>
+export const toOrderPublic = (o: Order): OrderPublic =>
 	OrderPublicSchema.parse({
 		id: o.id,
 		contactEmail: o.contactEmail,
 		amount: o.amount,
 		placedAt: o.createdAt,
-		updatedAt: o.updatedAt ?? null,
+		lastUpdatedAt: o.lastUpdatedAt ?? null,
 		status: toOrderPublicStatus(o.status),
 		shippingMethod: o.shippingMethod,
 		shippingAddress: o.shippingAddress,

@@ -1,6 +1,6 @@
-import { OrderRequest } from "../../../src/order/models/types/order-request.interface";
-import { Order } from "../../../src/order/models/entities/order.entity";
-import { OrderStatus } from "../../../src/order/models/enums/order-status.enum";
+import { OrderRequest } from "../../../src/orders/models/types/orders-request.interface";
+import { Order } from "../../../src/orders/models/entities/order.entity";
+import { OrderStatus } from "../../../src/orders/models/enums/order-status.enum";
 import { OrderAcceptedResponse } from "../../../src/clients/warehouse/warehouse-responses.interface";
 
 const userId1 = "a0c74a80-1a98-467c-8a9c-1db62b5c4b3e";
@@ -55,7 +55,7 @@ export const orderRequestBody2: OrderRequest = {
 export const order1: Order = {
 	id: orderId1,
 	createdAt: createdAt1,
-	updatedAt: null,
+	lastUpdatedAt: null,
 	userId: userId1,
 	status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
 	amount: 177.99,
@@ -89,7 +89,7 @@ export const order1: Order = {
 export const order2: Order = {
 	id: orderId2,
 	createdAt: createdAt2,
-	updatedAt: null,
+	lastUpdatedAt: null,
 	userId: userId2,
 	status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
 	amount: 50.99,
