@@ -17,6 +17,9 @@ export class Return {
 	@Column()
 	orderId: string;
 
+	@Column({ unique: true })
+	returnNumber: string;
+
 	@CreateDateColumn()
 	createdAt: Date;
 

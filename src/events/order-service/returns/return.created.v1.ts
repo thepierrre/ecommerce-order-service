@@ -3,24 +3,29 @@ import { z } from "zod";
 import type { Return } from "../../../returns/models/entities/return.entity";
 import { ReturnItemSchema } from "../../../returns/models/schemas/return-item.schema";
 
-export const ReturnCreatedV1Schema = z.object({
+export const ORDER_RETURN_CREATED_S = "order.return.created.v1";
+
+export const Order_ReturnCreatedEventSchema = z.object({
 	schemaVersion: z.literal(1),
 	eventId: z.uuid(),
 	occurredAt: z.iso.datetime(),
-	orderId: z.string(),
-	returnId: z.string(),
+	orderNumber: z.string(),
+	returnNumber: z.string(),
 	items: z.array(ReturnItemSchema).min(1),
 });
 
-export type ReturnCreatedV1 = z.infer<typeof ReturnCreatedV1Schema>;
+export type Order_ReturnCreatedEvent = z.infer<
+	typeof Order_ReturnCreatedEventSchema
+>;
 
-export const ORDER_RETURN_CREATED_S = "order.return.created.v1";
-
-export const toReturnCreatedV1 = (r: Return): ReturnCreatedV1 => ({
+export const toOrder_ReturnCreatedEvent = (
+	r: Return,
+	orderNumber: string,
+): Order_ReturnCreatedEvent => ({
 	schemaVersion: 1,
 	eventId: uuidv4(),
 	occurredAt: new Date().toISOString(),
-	orderId: r.orderId,
-	returnId: r.id,
+	orderNumber,
+	returnNumber: r.returnNumber,
 	items: r.items,
 });

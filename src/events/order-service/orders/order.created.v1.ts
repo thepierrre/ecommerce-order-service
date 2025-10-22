@@ -3,11 +3,13 @@ import { z } from "zod";
 import type { Order } from "../../../orders/models/entities/order.entity";
 import { OrderItemSchema } from "../../../orders/models/schemas/order-item.schema";
 
-export const OrderCreatedV1 = z.object({
+export const ORDER_ORDER_CREATED_S = "order.order.created.v1";
+
+export const Order_OrderCreatedEventSchema = z.object({
 	schemaVersion: z.literal(1),
 	eventId: z.uuid(),
 	occurredAt: z.iso.datetime(),
-	orderId: z.string(),
+	orderNumber: z.string(),
 	userId: z.string(),
 	amount: z.number(),
 	shippingMethod: z.string(),
@@ -15,15 +17,17 @@ export const OrderCreatedV1 = z.object({
 	items: z.array(OrderItemSchema).min(1),
 });
 
-export type OrderCreatedV1 = z.infer<typeof OrderCreatedV1>;
+export type Order_OrderCreatedEvent = z.infer<
+	typeof Order_OrderCreatedEventSchema
+>;
 
-export const ORDER_ORDER_CREATED_S = "order.order.created.v1";
-
-export const toOrderCreatedV1 = (o: Order): OrderCreatedV1 => ({
+export const toOrder_OrderCreatedEvent = (
+	o: Order,
+): Order_OrderCreatedEvent => ({
 	schemaVersion: 1,
 	eventId: uuidv4(),
 	occurredAt: new Date().toISOString(),
-	orderId: o.id,
+	orderNumber: o.orderNumber,
 	userId: o.userId,
 	amount: Number(o.amount),
 	shippingMethod: o.shippingMethod,

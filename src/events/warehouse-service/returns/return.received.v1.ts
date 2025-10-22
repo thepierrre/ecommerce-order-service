@@ -1,1 +1,4 @@
-export const WAREHOUSE_ORDER_ACCEPTED_S = "orderService.orders.created.v1";
+import { z } from "zod";
+import { v4 as uuidv4 } from "uuid";
+
+export const WAREHOUSE_RETURN_RECEIVED_S = "warehouse.return.received.v1";

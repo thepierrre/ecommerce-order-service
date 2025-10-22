@@ -3,8 +3,9 @@ import type { Order } from "../entities/order.entity";
 import { OrderStatus } from "../enums/order-status.enum";
 import { OrderItemSchema } from "./order-item.schema";
 
-export const OrderInternalResSchema = z.object({
+export const OrderResSchema = z.object({
 	id: z.string(),
+	orderNumber: z.string(),
 	userId: z.string(),
 	contactEmail: z.email(),
 	createdAt: z.iso.datetime(),
@@ -16,11 +17,12 @@ export const OrderInternalResSchema = z.object({
 	items: z.array(OrderItemSchema).min(1),
 });
 
-export type OrderInternalRes = z.infer<typeof OrderInternalResSchema>;
+export type OrderRes = z.infer<typeof OrderResSchema>;
 
-export const toOrderInternalRes = (o: Order): OrderInternalRes =>
-	OrderInternalResSchema.parse({
+export const toOrderRes = (o: Order): OrderRes =>
+	OrderResSchema.parse({
 		id: o.id,
+		orderNumber: o.orderNumber,
 		userId: o.userId,
 		contactEmail: o.contactEmail,
 		createdAt: o.createdAt,

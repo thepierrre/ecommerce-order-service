@@ -15,8 +15,7 @@ import {
 	type CreateReturn,
 	CreateReturnSchema,
 } from "../models/schemas/create-return.schema";
-import type { ReturnInternalRes } from "../models/schemas/return-internal-res.schema";
-import type { ReturnPublicRes } from "../models/schemas/return-public-res.schema";
+import type { ReturnRes } from "../models/schemas/return-res.schema";
 import type { ReturnsService } from "../services/returns.service";
 
 @Controller()
@@ -30,7 +29,7 @@ export class ReturnsController {
 		@Param("id") orderId: string,
 		@Body() dto: CreateReturn,
 		@Res({ passthrough: true }) res: Response,
-	): Promise<ReturnPublicRes> {
+	): Promise<ReturnRes> {
 		const created = await this.returnsSvc.createReturn(orderId, dto);
 
 		res.location(`/orders/${orderId}/returns/${created.id}`);
@@ -38,14 +37,12 @@ export class ReturnsController {
 	}
 
 	@Get("internal/orders/:id/returns")
-	async findByIdInternal(
-		@Param("id") orderId: string,
-	): Promise<ReturnInternalRes> {
+	async findByIdInternal(@Param("id") orderId: string): Promise<ReturnRes> {
 		return await this.returnsSvc.findByIdInternal(orderId);
 	}
 
 	@Get("orders/:id/returns")
-	async findByIdPublic(@Param("id") orderId: string): Promise<ReturnPublicRes> {
+	async findByIdPublic(@Param("id") orderId: string): Promise<ReturnRes> {
 		return await this.returnsSvc.findByIdPublic(orderId);
 	}
 }

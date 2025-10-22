@@ -5,7 +5,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import type { DataSource, Repository } from "typeorm";
 import {
 	ORDER_RETURN_CREATED_S,
-	toReturnCreatedV1,
+	toOrder_ReturnCreatedEvent,
 } from "../../events/order-service/returns/return.created.v1";
 import { isOrderDelivered } from "../../orders/domain/order.rules";
 import { initializeReturn } from "../../orders/domain/order.state";
@@ -13,13 +13,9 @@ import { Order } from "../../orders/models/entities/order.entity";
 import { Return } from "../models/entities/return.entity";
 import type { CreateReturn } from "../models/schemas/create-return.schema";
 import {
-	type ReturnInternalRes,
-	toReturnInternalRes,
-} from "../models/schemas/return-internal-res.schema";
-import {
-	type ReturnPublicRes,
-	toReturnPublicRes,
-} from "../models/schemas/return-public-res.schema";
+	type ReturnRes,
+	toReturnRes,
+} from "../models/schemas/return-res.schema";
 
 @Injectable()
 export class ReturnsService {
@@ -34,10 +30,7 @@ export class ReturnsService {
 		private readonly dataSource: DataSource,
 	) {}
 
-	async createReturn(
-		orderId: string,
-		dto: CreateReturn,
-	): Promise<ReturnPublicRes> {
+	async createReturn(orderId: string, dto: CreateReturn): Promise<ReturnRes> {
 		const { savedOrder, savedReturn } = await this.dataSource.transaction(
 			async (m) => {
 				const orderRepoTx = m.getRepository(Order);
@@ -69,25 +62,25 @@ export class ReturnsService {
 			},
 		);
 
-		const returnCreatedEvent = toReturnCreatedV1(savedReturn);
+		const returnCreatedEvent = toOrder_ReturnCreatedEvent(savedReturn);
 
 		this.nats.emit(ORDER_RETURN_CREATED_S, returnCreatedEvent);
 
-		return toReturnPublicRes(savedReturn);
+		return toReturnRes(savedReturn);
 	}
 
-	async findByIdInternal(orderId: string): Promise<ReturnInternalRes> {
+	async findByIdInternal(orderId: string): Promise<ReturnRes> {
 		const existing = await this.returnRepo.findOneOrFail({
 			where: { orderId },
 		});
-		return toReturnInternalRes(existing);
+		return toReturnRes(existing);
 	}
 
-	async findByIdPublic(orderId: string): Promise<ReturnPublicRes> {
+	async findByIdPublic(orderId: string): Promise<ReturnRes> {
 		const existing = await this.returnRepo.findOneOrFail({
 			where: { orderId },
 		});
-		return toReturnPublicRes(existing);
+		return toReturnRes(existing);
 	}
 
 	async doesReturnExist(orderId: string): Promise<boolean> {

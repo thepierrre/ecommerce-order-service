@@ -10,19 +10,12 @@ import { InjectRepository } from "@nestjs/typeorm";
 import type { Repository } from "typeorm";
 import {
 	ORDER_ORDER_CREATED_S,
-	toOrderCreatedV1,
+	toOrder_OrderCreatedEvent,
 } from "../../events/order-service/orders/order.created.v1";
 import { Order } from "../models/entities/order.entity";
 import { OrderStatus } from "../models/enums/order-status.enum";
 import type { CreateOrder } from "../models/schemas/create-order.schema";
-import {
-	type OrderInternalRes,
-	toOrderInternalRes,
-} from "../models/schemas/order-internal-res.schema";
-import {
-	type OrderPublicRes,
-	toOrderPublicRes,
-} from "../models/schemas/order-public-res.schema";
+import { type OrderRes, toOrderRes } from "../models/schemas/order-res.schema";
 import type { UpdateOrder } from "../models/schemas/update-order.schema";
 import { makeETag } from "../utils/make-etag";
 
@@ -36,7 +29,7 @@ export class OrdersService {
 		@Inject("NATS_SERVICE") private readonly nats: ClientProxy,
 	) {}
 
-	async create(dto: CreateOrder): Promise<OrderPublicRes> {
+	async create(dto: CreateOrder): Promise<OrderRes> {
 		try {
 			const createOrder: Order = this.orderRepo.create({
 				...dto,
@@ -44,11 +37,11 @@ export class OrdersService {
 			});
 			const saved = await this.orderRepo.save(createOrder);
 
-			const orderCreatedEvent = toOrderCreatedV1(saved);
+			const orderCreatedEvent = toOrder_OrderCreatedEvent(saved);
 
 			this.nats.emit(ORDER_ORDER_CREATED_S, orderCreatedEvent);
 
-			return toOrderPublicRes(saved);
+			return toOrderRes(saved);
 		} catch (err: unknown) {
 			const e = err as Error;
 			this.logger.error(`Failed to place the order: ${e.message}`, e.stack);
@@ -58,21 +51,16 @@ export class OrdersService {
 		}
 	}
 
-	async findByIdInternal(id: string): Promise<OrderInternalRes> {
+	async findById(id: string): Promise<OrderRes> {
 		const order = await this.orderRepo.findOneByOrFail({ id });
-		return toOrderInternalRes(order);
-	}
-
-	async findByIdPublic(id: string): Promise<OrderPublicRes> {
-		const order = await this.orderRepo.findOneByOrFail({ id });
-		return toOrderPublicRes(order);
+		return toOrderRes(order);
 	}
 
 	async updateOrder(
 		id: string,
 		patch: UpdateOrder,
 		etag?: string,
-	): Promise<{ order: OrderPublicRes; newEtag: string }> {
+	): Promise<{ order: OrderRes; newEtag: string }> {
 		if (!etag) {
 			throw new PreconditionFailedException("ETag header missing.");
 		}
@@ -93,7 +81,7 @@ export class OrdersService {
 		const updated = this.orderRepo.merge(existing, patch);
 		const saved = await this.orderRepo.save(updated);
 		return {
-			order: toOrderPublicRes(saved),
+			order: toOrderRes(saved),
 			newEtag: makeETag({
 				createdAt: saved.createdAt,
 				lastUpdatedAt: saved.lastUpdatedAt,
