@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { ReturnStatus } from "../enums/return-status.enum";
 import { ReturnItemSchema } from "./return-item.schema";
-import { ReturnStatus } from '../enums/return-status.enum';
 
 export const CreateReturnSchema = z.object({
 	orderId: z.string(),

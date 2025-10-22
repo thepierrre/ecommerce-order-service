@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
-import { ReturnController } from "../controllers/return.controller";
-import { ReturnService } from "../services/return.service";
+import { ReturnsController } from "../controllers/returns.controller";
+import { ReturnsService } from "../services/returns.service";
 import { ReturnModule } from "./return.module";
 
 @Module({
 	imports: [ReturnModule],
-	providers: [ReturnService],
-	controllers: [ReturnController],
+	providers: [ReturnsService],
+	controllers: [ReturnsController],
 })
 export class ReturnHttpModule {}

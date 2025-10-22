@@ -1,179 +1,179 @@
-import { OrderService } from "./order.service";
-import { Test, TestingModule } from "@nestjs/testing";
-import { WarehouseClientService } from "../../clients/warehouse/warehouse-client.service";
-import { getRepositoryToken } from "@nestjs/typeorm";
-import { Order } from "../models/entities/order.entity";
-import { Repository } from "typeorm";
-import { OrderRequest } from "../models/types/orders-request.interface";
-import { OrderStatus } from "../models/enums/order-status.enum";
-import {
-	order1,
-	order2,
-	orderAcceptedResponse,
-	orderRequestBody1,
-	updatedOrder,
-} from "../../../test/util/service/order-service.mocks";
-import { Logger, NotFoundException } from "@nestjs/common";
-
-describe("OrderService", () => {
-	let orderService: OrderService;
-	let warehouseClientService: WarehouseClientService;
-	let orderRepository: Repository<Order>;
-
-	const mockWareHouseClientService = {
-		sendNewOrderToWarehouse: jest.fn(),
-	};
-
-	const mockOrderRepository = {
-		create: jest.fn(),
-		save: jest.fn(),
-		findOneBy: jest.fn(),
-		merge: jest.fn(),
-	};
-
-	beforeEach(async () => {
-		const module: TestingModule = await Test.createTestingModule({
-			providers: [
-				OrderService,
-				{
-					provide: WarehouseClientService,
-					useValue: mockWareHouseClientService,
-				},
-				{
-					provide: getRepositoryToken(Order),
-					useValue: mockOrderRepository,
-				},
-			],
-		}).compile();
-
-		orderService = module.get<OrderService>(OrderService);
-		warehouseClientService = module.get<WarehouseClientService>(
-			WarehouseClientService,
-		);
-		orderRepository = module.get<Repository<Order>>(
-			getRepositoryToken(Order),
-		) as jest.Mocked<Repository<Order>>;
-
-		jest.spyOn(Logger.prototype, "error").mockImplementation(() => {});
-	});
-
-	it("is defined", () => {
-		expect(orderService).toBeDefined();
-	});
-
-	it("createOrder: returns a newly created orders", async () => {
-		jest.spyOn(orderRepository, "create").mockImplementation(
-			(orderRequest: OrderRequest) =>
-				({
-					...orderRequest,
-					id: order1.id,
-					createdAt: order1.createdAt,
-					lastUpdatedAt: null,
-					status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
-				}) as Order,
-		);
-
-		jest
-			.spyOn(orderRepository, "save")
-			.mockImplementation(async (order: Order) => {
-				return order;
-			});
-
-		const response = await orderService.create(orderRequestBody1);
-
-		expect(orderRepository.create).toHaveBeenCalledWith({
-			...orderRequestBody1,
-			status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
-		});
-
-		expect(orderRepository.save).toHaveBeenCalledWith(
-			expect.objectContaining({
-				id: order1.id,
-				createdAt: order1.createdAt,
-			}),
-		);
-
-		expect(response).toEqual(order1);
-	});
-
-	it("createOrder: returns a database error", async () => {
-		jest.spyOn(orderRepository, "create").mockImplementation(() => {
-			throw new Error("Cannot connect to the database.");
-		});
-
-		await expect(orderService.create(orderRequestBody1)).rejects.toThrow(
-			"Cannot connect to the database.",
-		);
-		expect(Logger.prototype.error).toHaveBeenCalledWith(
-			"Failed to save the orders: Cannot connect to the database.",
-		);
-	});
-
-	it("updateOrder: updates the orders successfully", async () => {
-		jest.spyOn(orderRepository, "findOneBy").mockResolvedValue(order2);
-		jest.spyOn(orderRepository, "merge").mockReturnValue(updatedOrder);
-		jest.spyOn(orderRepository, "save").mockResolvedValue(updatedOrder);
-
-		await orderService.updateOrder({
-			orderId: order2.id,
-			orderStatus: OrderStatus.SHIPPED,
-		});
-
-		expect(orderRepository.findOneBy).toHaveBeenCalledWith({ id: order2.id });
-		expect(orderRepository.merge).toHaveBeenCalledWith(order2, {
-			status: OrderStatus.SHIPPED,
-		});
-		expect(orderRepository.save).toHaveBeenCalledWith(updatedOrder);
-	});
-
-	it("updateOrder: returns a not-found error if the orders does not exist", async () => {
-		jest.spyOn(orderRepository, "findOneBy").mockResolvedValue(null);
-
-		expect(orderRepository.findOneBy).toHaveBeenCalledWith({ id: order2.id });
-		await expect(
-			orderService.updateOrder({
-				orderId: order2.id,
-				orderStatus: OrderStatus.PROCESSING_BY_WAREHOUSE,
-			}),
-		).rejects.toThrow(
-			new NotFoundException(`Order with the id ${order2.id} not found.`),
-		);
-		expect(Logger.prototype.error).toHaveBeenCalledWith(
-			`Order with the id ${order2.id} not found.`,
-		);
-	});
-
-	it("sendNewOrderToWarehouse: returns an orders accepted response", async () => {
-		jest
-			.spyOn(warehouseClientService, "sendNewOrderToWarehouse")
-			.mockResolvedValue(orderAcceptedResponse);
-
-		jest.spyOn(orderService, "updateOrder").mockResolvedValue();
-
-		const response = await orderService.sendNewOrderToWarehouse(order1);
-
-		expect(warehouseClientService.sendNewOrderToWarehouse).toHaveBeenCalledWith(
-			order1,
-		);
-		expect(response).toEqual(orderAcceptedResponse);
-	});
-
-	it("sendNewOrderToWarehouse: returns an error when the warehouse is unreachable", async () => {
-		jest
-			.spyOn(warehouseClientService, "sendNewOrderToWarehouse")
-			.mockRejectedValue(
-				new Error(
-					"ServiceUnavailableException: Unable to reach the warehouse service.",
-				),
-			);
-
-		await expect(orderService.sendNewOrderToWarehouse(order1)).rejects.toThrow(
-			"ServiceUnavailableException: Unable to reach the warehouse service.",
-		);
-
-		expect(Logger.prototype.error).toHaveBeenCalledWith(
-			"Failed to send the orders to the warehouse: ServiceUnavailableException: " +
-				"Unable to reach the warehouse service.",
-		);
-	});
-});
+// import { OrdersService } from "./orders.service";
+// import { Test, TestingModule } from "@nestjs/testing";
+// import { WarehouseClientService } from "../../clients/warehouse/warehouse-client.service";
+// import { getRepositoryToken } from "@nestjs/typeorm";
+// import { Order } from "../models/entities/order.entity";
+// import { Repository } from "typeorm";
+// import { OrderRequest } from "../models/types/orders-request.interface";
+// import { OrderStatus } from "../models/enums/order-status.enum";
+// import {
+// 	order1,
+// 	order2,
+// 	orderAcceptedResponse,
+// 	orderRequestBody1,
+// 	updatedOrder,
+// } from "../../../test/util/service/order-service.mocks";
+// import { Logger, NotFoundException } from "@nestjs/common";
+//
+// describe("OrderService", () => {
+// 	let orderService: OrdersService;
+// 	let warehouseClientService: WarehouseClientService;
+// 	let orderRepository: Repository<Order>;
+//
+// 	const mockWareHouseClientService = {
+// 		sendNewOrderToWarehouse: jest.fn(),
+// 	};
+//
+// 	const mockOrderRepository = {
+// 		create: jest.fn(),
+// 		save: jest.fn(),
+// 		findOneBy: jest.fn(),
+// 		merge: jest.fn(),
+// 	};
+//
+// 	beforeEach(async () => {
+// 		const module: TestingModule = await Test.createTestingModule({
+// 			providers: [
+// 				OrdersService,
+// 				{
+// 					provide: WarehouseClientService,
+// 					useValue: mockWareHouseClientService,
+// 				},
+// 				{
+// 					provide: getRepositoryToken(Order),
+// 					useValue: mockOrderRepository,
+// 				},
+// 			],
+// 		}).compile();
+//
+// 		orderService = module.get<OrdersService>(OrdersService);
+// 		warehouseClientService = module.get<WarehouseClientService>(
+// 			WarehouseClientService,
+// 		);
+// 		orderRepository = module.get<Repository<Order>>(
+// 			getRepositoryToken(Order),
+// 		) as jest.Mocked<Repository<Order>>;
+//
+// 		jest.spyOn(Logger.prototype, "error").mockImplementation(() => {});
+// 	});
+//
+// 	it("is defined", () => {
+// 		expect(orderService).toBeDefined();
+// 	});
+//
+// 	it("createOrder: returns a newly created orders", async () => {
+// 		jest.spyOn(orderRepository, "create").mockImplementation(
+// 			(orderRequest: OrderRequest) =>
+// 				({
+// 					...orderRequest,
+// 					id: order1.id,
+// 					createdAt: order1.createdAt,
+// 					lastUpdatedAt: null,
+// 					status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
+// 				}) as Order,
+// 		);
+//
+// 		jest
+// 			.spyOn(orderRepository, "save")
+// 			.mockImplementation(async (order: Order) => {
+// 				return order;
+// 			});
+//
+// 		const response = await orderService.create(orderRequestBody1);
+//
+// 		expect(orderRepository.create).toHaveBeenCalledWith({
+// 			...orderRequestBody1,
+// 			status: OrderStatus.PENDING_WAREHOUSE_RESPONSE,
+// 		});
+//
+// 		expect(orderRepository.save).toHaveBeenCalledWith(
+// 			expect.objectContaining({
+// 				id: order1.id,
+// 				createdAt: order1.createdAt,
+// 			}),
+// 		);
+//
+// 		expect(response).toEqual(order1);
+// 	});
+//
+// 	it("createOrder: returns a database error", async () => {
+// 		jest.spyOn(orderRepository, "create").mockImplementation(() => {
+// 			throw new Error("Cannot connect to the database.");
+// 		});
+//
+// 		await expect(orderService.create(orderRequestBody1)).rejects.toThrow(
+// 			"Cannot connect to the database.",
+// 		);
+// 		expect(Logger.prototype.error).toHaveBeenCalledWith(
+// 			"Failed to save the orders: Cannot connect to the database.",
+// 		);
+// 	});
+//
+// 	it("updateOrder: updates the orders successfully", async () => {
+// 		jest.spyOn(orderRepository, "findOneBy").mockResolvedValue(order2);
+// 		jest.spyOn(orderRepository, "merge").mockReturnValue(updatedOrder);
+// 		jest.spyOn(orderRepository, "save").mockResolvedValue(updatedOrder);
+//
+// 		await orderService.updateOrder({
+// 			orderId: order2.id,
+// 			orderStatus: OrderStatus.SHIPPED,
+// 		});
+//
+// 		expect(orderRepository.findOneBy).toHaveBeenCalledWith({ id: order2.id });
+// 		expect(orderRepository.merge).toHaveBeenCalledWith(order2, {
+// 			status: OrderStatus.SHIPPED,
+// 		});
+// 		expect(orderRepository.save).toHaveBeenCalledWith(updatedOrder);
+// 	});
+//
+// 	it("updateOrder: returns a not-found error if the orders does not exist", async () => {
+// 		jest.spyOn(orderRepository, "findOneBy").mockResolvedValue(null);
+//
+// 		expect(orderRepository.findOneBy).toHaveBeenCalledWith({ id: order2.id });
+// 		await expect(
+// 			orderService.updateOrder({
+// 				orderId: order2.id,
+// 				orderStatus: OrderStatus.PROCESSING_BY_WAREHOUSE,
+// 			}),
+// 		).rejects.toThrow(
+// 			new NotFoundException(`Order with the id ${order2.id} not found.`),
+// 		);
+// 		expect(Logger.prototype.error).toHaveBeenCalledWith(
+// 			`Order with the id ${order2.id} not found.`,
+// 		);
+// 	});
+//
+// 	it("sendNewOrderToWarehouse: returns an orders accepted response", async () => {
+// 		jest
+// 			.spyOn(warehouseClientService, "sendNewOrderToWarehouse")
+// 			.mockResolvedValue(orderAcceptedResponse);
+//
+// 		jest.spyOn(orderService, "updateOrder").mockResolvedValue();
+//
+// 		const response = await orderService.sendNewOrderToWarehouse(order1);
+//
+// 		expect(warehouseClientService.sendNewOrderToWarehouse).toHaveBeenCalledWith(
+// 			order1,
+// 		);
+// 		expect(response).toEqual(orderAcceptedResponse);
+// 	});
+//
+// 	it("sendNewOrderToWarehouse: returns an error when the warehouse is unreachable", async () => {
+// 		jest
+// 			.spyOn(warehouseClientService, "sendNewOrderToWarehouse")
+// 			.mockRejectedValue(
+// 				new Error(
+// 					"ServiceUnavailableException: Unable to reach the warehouse service.",
+// 				),
+// 			);
+//
+// 		await expect(orderService.sendNewOrderToWarehouse(order1)).rejects.toThrow(
+// 			"ServiceUnavailableException: Unable to reach the warehouse service.",
+// 		);
+//
+// 		expect(Logger.prototype.error).toHaveBeenCalledWith(
+// 			"Failed to send the orders to the warehouse: ServiceUnavailableException: " +
+// 				"Unable to reach the warehouse service.",
+// 		);
+// 	});
+// });

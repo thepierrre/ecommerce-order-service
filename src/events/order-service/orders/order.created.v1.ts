@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import type { Order } from "../../orders/models/entities/order.entity";
-import { OrderItemSchema } from "../../orders/models/schemas/order-item.schema";
+import type { Order } from "../../../orders/models/entities/order.entity";
+import { OrderItemSchema } from "../../../orders/models/schemas/order-item.schema";
 
-export const OrderCreatedV1Schema = z.object({
+export const OrderCreatedV1 = z.object({
 	schemaVersion: z.literal(1),
 	eventId: z.uuid(),
 	occurredAt: z.iso.datetime(),
@@ -15,9 +15,9 @@ export const OrderCreatedV1Schema = z.object({
 	items: z.array(OrderItemSchema).min(1),
 });
 
-export type OrderCreatedV1 = z.infer<typeof OrderCreatedV1Schema>;
+export type OrderCreatedV1 = z.infer<typeof OrderCreatedV1>;
 
-export const ORDER_CREATED_SUBJECT = "orders.created.v1";
+export const ORDER_ORDER_CREATED_S = "order.order.created.v1";
 
 export const toOrderCreatedV1 = (o: Order): OrderCreatedV1 => ({
 	schemaVersion: 1,

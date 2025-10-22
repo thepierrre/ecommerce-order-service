@@ -1,52 +1,44 @@
 import { z } from "zod";
 import type { Order } from "../entities/order.entity";
 import { OrderStatus } from "../enums/order-status.enum";
+import { OrderStatusPublic } from "../enums/order-status-public.enum";
 import { OrderItemSchema } from "./order-item.schema";
-import { PublicOrderStatusSchema } from "./public-order-status.schema";
 
-export const OrderPublicSchema = z.object({
+export const OrderPublicResSchema = z.object({
 	id: z.string(),
 	contactEmail: z.email(),
 	amount: z.number(),
 	placedAt: z.iso.datetime(),
 	lastUpdatedAt: z.iso.datetime().nullish(),
-	status: PublicOrderStatusSchema,
+	status: OrderStatusPublic,
 	shippingMethod: z.string(),
 	shippingAddress: z.string(),
 	items: z.array(OrderItemSchema).min(1),
 });
 
-export type OrderPublic = z.infer<typeof OrderPublicSchema>;
+export type OrderPublicRes = z.infer<typeof OrderPublicResSchema>;
 
-export type OrderPublicStatus =
-	| "placed"
-	| "processing"
-	| "shipped"
-	| "delivered"
-	| "return initiated"
-	| "return completed";
-
-const toOrderPublicStatus = (s: OrderStatus): OrderPublicStatus => {
+const toOrderPublicStatus = (s: OrderStatus): OrderStatusPublic => {
 	switch (s) {
 		case OrderStatus.PENDING_WAREHOUSE_RESPONSE:
 		case OrderStatus.WAREHOUSE_NOT_READY:
-			return "placed";
+			return OrderStatusPublic.PLACED;
 		case OrderStatus.PROCESSING_BY_WAREHOUSE:
-			return "processing";
+			return OrderStatusPublic.PROCESSING;
 		case OrderStatus.SHIPPED:
-			return "shipped";
+			return OrderStatusPublic.SHIPPED;
 		case OrderStatus.DELIVERED:
-			return "delivered";
+			return OrderStatusPublic.DELIVERED;
 		case OrderStatus.RETURN_INITIATED:
-			return "return initiated";
+			return OrderStatusPublic.RETURN_INITIATED;
 		case OrderStatus.RETURNED:
 		case OrderStatus.REFUNDED:
-			return "return completed";
+			return OrderStatusPublic.RETURN_COMPLETED;
 	}
 };
 
-export const toOrderPublic = (o: Order): OrderPublic =>
-	OrderPublicSchema.parse({
+export const toOrderPublicRes = (o: Order): OrderPublicRes =>
+	OrderPublicResSchema.parse({
 		id: o.id,
 		contactEmail: o.contactEmail,
 		amount: o.amount,

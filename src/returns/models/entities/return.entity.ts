@@ -5,11 +5,9 @@ import {
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
-import type { OrderItem } from "../../../orders/models/types/order-item.interface";
-import { OrderStatus } from "../../../orders/models/enums/order-status.enum";
-import { ReturnStatus } from "../enums/return-status.enum";
 import { ReturnReason } from "../enums/return-reason.enum";
-import { ReturnItem } from '../schemas/return-item.schema';
+import { ReturnStatus } from "../enums/return-status.enum";
+import type { ReturnItem } from "../schemas/return-item.schema";
 
 @Entity()
 export class Return {

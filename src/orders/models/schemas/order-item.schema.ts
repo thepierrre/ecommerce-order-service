@@ -6,4 +6,4 @@ export const OrderItemSchema = z.object({
 	quantity: z.number().int().positive(),
 });
 
-export type OrderItemSchema = z.infer<typeof OrderItemSchema>;
+export type OrderItem = z.infer<typeof OrderItemSchema>;
