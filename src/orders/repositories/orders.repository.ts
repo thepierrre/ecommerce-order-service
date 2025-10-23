@@ -9,7 +9,7 @@ export class OrdersRepository extends Repository<Order> {
 		super(Order, dataSource.createEntityManager());
 	}
 
-	async updateStatus(id: string, status: OrderStatus): Promise<void> {
-		await this.update({ id }, { status });
+	async updateStatus(orderNumber: string, status: OrderStatus): Promise<void> {
+		await this.update({ orderNumber }, { status });
 	}
 }

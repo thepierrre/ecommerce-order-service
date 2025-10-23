@@ -2,26 +2,26 @@ import { Controller, Logger } from "@nestjs/common";
 import { EventPattern, Payload } from "@nestjs/microservices";
 import {
 	WAREHOUSE_ORDER_ACCEPTED_S,
-	type Warehouse_OrderAcceptedV1,
+	Warehouse_OrderAcceptedSchema,
 } from "../../events/warehouse-service/orders/order.accepted.v1";
-import type { OrdersRepository } from "../repositories/orders.repository";
-import { OrderStatus } from "../models/enums/order-status.enum";
 import {
 	WAREHOUSE_ORDER_DELIVERED_S,
-	Warehouse_OrderDeliveredV1,
+	Warehouse_OrderDeliveredSchema,
 } from "../../events/warehouse-service/orders/order.delivered.v1";
 import {
-	WAREHOUSE_ORDER_PROCESSING_STARTED_S,
-	Warehouse_OrderProcessingStartedV1,
-} from "../../events/warehouse-service/orders/order.processing-started.v1";
-import {
 	WAREHOUSE_ORDER_PACKED_S,
-	Warehouse_OrderPackedV1,
+	Warehouse_OrderPackedSchema,
 } from "../../events/warehouse-service/orders/order.packed.v1";
 import {
+	WAREHOUSE_ORDER_PROCESSING_STARTED_S,
+	Warehouse_OrderProcessingStartedSchema,
+} from "../../events/warehouse-service/orders/order.processing-started.v1";
+import {
 	WAREHOUSE_ORDER_SHIPPED_S,
-	Warehouse_OrderShippedV1,
+	Warehouse_OrderShippedSchema,
 } from "../../events/warehouse-service/orders/order.shipped.v1";
+import { OrderStatus } from "../models/enums/order-status.enum";
+import type { OrdersRepository } from "../repositories/orders.repository";
 
 @Controller()
 export class WarehouseEventsListener {
@@ -30,47 +30,50 @@ export class WarehouseEventsListener {
 	constructor(private readonly orderRepo: OrdersRepository) {}
 
 	@EventPattern(WAREHOUSE_ORDER_ACCEPTED_S)
-	async handleOrderAccepted(@Payload() event: Warehouse_OrderAcceptedV1) {
-		const { orderId } = event;
-		this.logger.log(`Received ${WAREHOUSE_ORDER_ACCEPTED_S}: ${orderId}`);
+	async onOrderAccepted(@Payload() payload: unknown) {
+		const event = Warehouse_OrderAcceptedSchema.parse(payload);
+		const { orderNumber } = event;
+		this.logger.log(`Received ${WAREHOUSE_ORDER_ACCEPTED_S}: ${orderNumber}`);
 		await this.orderRepo.updateStatus(
-			orderId,
+			orderNumber,
 			OrderStatus.ACCEPTED_BY_WAREHOUSE,
 		);
 	}
 
 	@EventPattern(WAREHOUSE_ORDER_PROCESSING_STARTED_S)
-	async handleOrderProcessingStarted(
-		@Payload() event: Warehouse_OrderProcessingStartedV1,
-	) {
-		const { orderId } = event;
+	async onOrderProcessingStarted(@Payload() payload: unknown) {
+		const event = Warehouse_OrderProcessingStartedSchema.parse(payload);
+		const { orderNumber } = event;
 		this.logger.log(
-			`Received ${WAREHOUSE_ORDER_PROCESSING_STARTED_S}: ${orderId}`,
+			`Received ${WAREHOUSE_ORDER_PROCESSING_STARTED_S}: ${orderNumber}`,
 		);
 		await this.orderRepo.updateStatus(
-			orderId,
+			orderNumber,
 			OrderStatus.PROCESSING_BY_WAREHOUSE,
 		);
 	}
 
 	@EventPattern(WAREHOUSE_ORDER_PACKED_S)
-	async handleOrderPacked(@Payload() event: Warehouse_OrderPackedV1) {
-		const { orderId } = event;
-		this.logger.log(`Received ${WAREHOUSE_ORDER_PACKED_S}: ${orderId}`);
-		await this.orderRepo.updateStatus(orderId, OrderStatus.PACKED);
+	async handleOrderPacked(@Payload() payload: unknown) {
+		const event = Warehouse_OrderPackedSchema.parse(payload);
+		const { orderNumber } = event;
+		this.logger.log(`Received ${WAREHOUSE_ORDER_PACKED_S}: ${orderNumber}`);
+		await this.orderRepo.updateStatus(orderNumber, OrderStatus.PACKED);
 	}
 
 	@EventPattern(WAREHOUSE_ORDER_SHIPPED_S)
-	async handleOrderShipped(@Payload() event: Warehouse_OrderShippedV1) {
-		const { orderId } = event;
-		this.logger.log(`Received ${WAREHOUSE_ORDER_SHIPPED_S}: ${orderId}`);
-		await this.orderRepo.updateStatus(orderId, OrderStatus.SHIPPED);
+	async handleOrderShipped(@Payload() payload: unknown) {
+		const event = Warehouse_OrderShippedSchema.parse(payload);
+		const { orderNumber } = event;
+		this.logger.log(`Received ${WAREHOUSE_ORDER_SHIPPED_S}: ${orderNumber}`);
+		await this.orderRepo.updateStatus(orderNumber, OrderStatus.SHIPPED);
 	}
 
 	@EventPattern(WAREHOUSE_ORDER_DELIVERED_S)
-	async handleOrderDelivered(@Payload() event: Warehouse_OrderDeliveredV1) {
-		const { orderId } = event;
-		this.logger.log(`Received ${WAREHOUSE_ORDER_DELIVERED_S}: ${orderId}`);
-		await this.orderRepo.updateStatus(orderId, OrderStatus.DELIVERED);
+	async handleOrderDelivered(@Payload() payload: unknown) {
+		const event = Warehouse_OrderDeliveredSchema.parse(payload);
+		const { orderNumber } = event;
+		this.logger.log(`Received ${WAREHOUSE_ORDER_DELIVERED_S}: ${orderNumber}`);
+		await this.orderRepo.updateStatus(orderNumber, OrderStatus.DELIVERED);
 	}
 }

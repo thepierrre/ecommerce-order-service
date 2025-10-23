@@ -18,14 +18,14 @@ import type { CreateOrder } from "../models/schemas/create-order.schema";
 import { type OrderRes, toOrderRes } from "../models/schemas/order-res.schema";
 import type { UpdateOrder } from "../models/schemas/update-order.schema";
 import { makeETag } from "../utils/make-etag";
+import type { OrdersRepository } from "../repositories/orders.repository";
 
 @Injectable()
 export class OrdersService {
 	private readonly logger = new Logger(OrdersService.name);
 
 	constructor(
-		@InjectRepository(Order)
-		private readonly orderRepo: Repository<Order>,
+		private readonly orderRepo: OrdersRepository,
 		@Inject("NATS_SERVICE") private readonly nats: ClientProxy,
 	) {}
 

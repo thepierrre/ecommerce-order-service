@@ -16,6 +16,7 @@ import {
 	type ReturnRes,
 	toReturnRes,
 } from "../models/schemas/return-res.schema";
+import type { OrdersRepository } from "../../orders/repositories/orders.repository";
 
 @Injectable()
 export class ReturnsService {
@@ -23,9 +24,8 @@ export class ReturnsService {
 
 	constructor(
 		@InjectRepository(Return)
-		private readonly returnRepo: Repository<Return>,
-		@InjectRepository(Order)
-		private readonly orderRepo: Repository<Order>,
+		private readonly returnsRepo: OrdersRepository,
+		private readonly ordersRepo: OrdersRepository,
 		@Inject("NATS_SERVICE") private readonly nats: ClientProxy,
 		private readonly dataSource: DataSource,
 	) {}
@@ -70,18 +70,22 @@ export class ReturnsService {
 	}
 
 	async findByIdInternal(orderId: string): Promise<ReturnRes> {
-		const existing = await this.returnRepo.findOneOrFail({
+		const existing = await this.returnsRepo.findOneOrFail({
 			where: { orderId },
 		});
 		return toReturnRes(existing);
 	}
 
 	async findByIdPublic(orderId: string): Promise<ReturnRes> {
-		const existing = await this.returnRepo.findOneOrFail({
+		const existing = await this.returnsRepo.findOneOrFail({
 			where: { orderId },
 		});
 		return toReturnRes(existing);
 	}
+
+	async processReturnReceived(orderNumber: string, returnNumber: string) {}
+
+	async processReturnCompleted(orderNumber: string, returnNumber: string) {}
 
 	async doesReturnExist(orderId: string): Promise<boolean> {
 		const existing = await this.returnRepo.findOne({ where: { orderId } });
