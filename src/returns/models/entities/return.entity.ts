@@ -1,4 +1,5 @@
 import {
+	BeforeInsert,
 	Column,
 	CreateDateColumn,
 	Entity,
@@ -8,6 +9,7 @@ import {
 import { ReturnReason } from "../enums/return-reason.enum";
 import { ReturnStatus } from "../enums/return-status.enum";
 import type { ReturnItem } from "../schemas/return-item.schema";
+import { format } from "date-fns";
 
 @Entity()
 export class Return {
@@ -44,4 +46,11 @@ export class Return {
 
 	@Column("json")
 	items: ReturnItem[];
+
+	@BeforeInsert()
+	generateReturnNumber() {
+		const date = format(new Date(), "yyyyMMdd-HHmmss");
+		const random = Math.floor(1000 + Math.random());
+		this.returnNumber = `RET-${date}-${random}`;
+	}
 }

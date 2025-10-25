@@ -10,16 +10,16 @@ import {
 import { isOrderDelivered } from "../../orders/domain/order.rules";
 import { initializeReturn } from "../../orders/domain/order.state";
 import { Order } from "../../orders/models/entities/order.entity";
+import { OrderStatus } from "../../orders/models/enums/order-status.enum";
 import type { OrdersRepository } from "../../orders/repositories/orders.repository";
 import { Return } from "../models/entities/return.entity";
+import { ReturnStatus } from "../models/enums/return-status.enum";
 import type { CreateReturn } from "../models/schemas/create-return.schema";
 import {
 	type ReturnRes,
 	toReturnRes,
 } from "../models/schemas/return-res.schema";
 import type { ReturnsRepository } from "../repositories/returns.repository";
-import { OrderStatus } from "../../orders/models/enums/order-status.enum";
-import { ReturnStatus } from "../models/enums/return-status.enum";
 
 @Injectable()
 export class ReturnsService {

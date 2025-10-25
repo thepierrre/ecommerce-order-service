@@ -1,4 +1,5 @@
 import {
+	BeforeInsert,
 	Column,
 	CreateDateColumn,
 	Entity,
@@ -7,6 +8,7 @@ import {
 } from "typeorm";
 import { OrderStatus } from "../enums/order-status.enum";
 import type { OrderItem } from "../types/order-item.interface";
+import { format } from "date-fns";
 
 @Entity()
 export class Order {
@@ -46,4 +48,11 @@ export class Order {
 
 	@Column("json")
 	items: OrderItem[];
+
+	@BeforeInsert()
+	generateOrderNumber() {
+		const date = format(new Date(), "yyyyMMdd-HHmmss");
+		const random = Math.floor(1000 + Math.random());
+		this.orderNumber = `ORD-${date}-${random}`;
+	}
 }
