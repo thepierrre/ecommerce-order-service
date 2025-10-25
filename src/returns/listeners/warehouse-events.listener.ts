@@ -2,10 +2,9 @@ import { Controller, Logger } from "@nestjs/common";
 import { EventPattern, Payload } from "@nestjs/microservices";
 import { WAREHOUSE_ORDER_PACKED_S } from "../../events/warehouse-service/orders/order.packed.v1";
 import { WAREHOUSE_ORDER_PROCESSING_STARTED_S } from "../../events/warehouse-service/orders/order.processing-started.v1";
-import { OrderStatus } from "../models/enums/order-status.enum";
-import { Warehouse_ReturnReceived } from "../../events/warehouse-service/returns/return.received.v1";
-import { Warehouse_ReturnCompleted } from "../../events/warehouse-service/returns/return.completed.v1";
-import { ReturnsService } from "../services/returns.service";
+import type { Warehouse_ReturnCompleted } from "../../events/warehouse-service/returns/return.completed.v1";
+import type { Warehouse_ReturnReceived } from "../../events/warehouse-service/returns/return.received.v1";
+import type { ReturnsService } from "../services/returns.service";
 
 @Controller()
 export class WarehouseEventsListener {

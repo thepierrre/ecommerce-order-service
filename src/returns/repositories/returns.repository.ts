@@ -9,7 +9,10 @@ export class ReturnsRepository extends Repository<Return> {
 		super(Return, dataSource.createEntityManager());
 	}
 
-	async updateStatus(id: string, status: ReturnStatus): Promise<void> {
-		await this.update({ id }, { status });
+	async updateStatus(
+		returnNumber: string,
+		status: ReturnStatus,
+	): Promise<void> {
+		await this.update({ returnNumber }, { status });
 	}
 }

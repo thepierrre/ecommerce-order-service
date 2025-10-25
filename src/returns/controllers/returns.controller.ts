@@ -37,12 +37,7 @@ export class ReturnsController {
 	}
 
 	@Get("internal/orders/:id/returns")
-	async findByIdInternal(@Param("id") orderId: string): Promise<ReturnRes> {
-		return await this.returnsSvc.findByIdInternal(orderId);
-	}
-
-	@Get("orders/:id/returns")
-	async findByIdPublic(@Param("id") orderId: string): Promise<ReturnRes> {
-		return await this.returnsSvc.findByIdPublic(orderId);
+	async findById(@Param("id") orderId: string): Promise<ReturnRes> {
+		return await this.returnsSvc.findById(orderId);
 	}
 }
