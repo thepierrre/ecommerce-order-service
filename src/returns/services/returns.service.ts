@@ -1,7 +1,7 @@
 import { ConflictException, Inject, Injectable, Logger } from "@nestjs/common";
 import type { ClientProxy } from "@nestjs/microservices";
 
-import { InjectRepository } from "@nestjs/typeorm";
+import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import type { DataSource } from "typeorm";
 import {
 	ORDER_RETURN_CREATED_S,
@@ -26,11 +26,11 @@ export class ReturnsService {
 	private readonly logger = new Logger(ReturnsService.name);
 
 	constructor(
-		@InjectRepository(Return)
+		@Inject("ReturnsRepository")
 		private readonly returnsRepo: ReturnsRepository,
-		private readonly ordersRepo: OrdersRepository,
+		@Inject("OrdersRepository") private readonly ordersRepo: OrdersRepository,
 		@Inject("NATS_SERVICE") private readonly nats: ClientProxy,
-		private readonly dataSource: DataSource,
+		@InjectDataSource() private readonly dataSource: DataSource,
 	) {}
 
 	async createReturn(orderId: string, dto: CreateReturn): Promise<ReturnRes> {

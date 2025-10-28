@@ -23,7 +23,7 @@ import {
 	UpdateOrderSchema,
 } from "../models/schemas/update-order.schema";
 import { ZodValidationPipe } from "../pipes/zod-validation.pipe";
-import type { OrdersService } from "../services/orders.service";
+import { OrdersService } from "../services/orders.service";
 
 @Controller()
 export class OrdersController {

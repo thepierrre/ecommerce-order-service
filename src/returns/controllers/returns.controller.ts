@@ -16,7 +16,7 @@ import {
 	CreateReturnSchema,
 } from "../models/schemas/create-return.schema";
 import type { ReturnRes } from "../models/schemas/return-res.schema";
-import type { ReturnsService } from "../services/returns.service";
+import { ReturnsService } from "../services/returns.service";
 
 @Controller()
 export class ReturnsController {

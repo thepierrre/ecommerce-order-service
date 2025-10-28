@@ -25,7 +25,7 @@ export class OrdersService {
 	private readonly logger = new Logger(OrdersService.name);
 
 	constructor(
-		private readonly orderRepo: OrdersRepository,
+		@Inject("OrdersRepository") private readonly orderRepo: OrdersRepository,
 		@Inject("NATS_SERVICE") private readonly nats: ClientProxy,
 	) {}
 

@@ -1,4 +1,4 @@
-import { Controller, Logger } from "@nestjs/common";
+import { Controller, Inject, Logger } from "@nestjs/common";
 import { EventPattern, Payload } from "@nestjs/microservices";
 import {
 	WAREHOUSE_ORDER_ACCEPTED_S,
@@ -21,13 +21,13 @@ import {
 	Warehouse_OrderShippedSchema,
 } from "../../events/warehouse-service/orders/order.shipped.v1";
 import { OrderStatus } from "../models/enums/order-status.enum";
-import type { OrdersRepository } from "../repositories/orders.repository";
+import { OrdersRepository } from "../repositories/orders.repository";
 
 @Controller()
-export class WarehouseEventsListener {
-	private readonly logger = new Logger(WarehouseEventsListener.name);
+export class WarehouseOrderEventsListener {
+	private readonly logger = new Logger(WarehouseOrderEventsListener.name);
 
-	constructor(private readonly orderRepo: OrdersRepository) {}
+	constructor(@Inject("OrdersRepository") private readonly orderRepo: OrdersRepository) { }
 
 	@EventPattern(WAREHOUSE_ORDER_ACCEPTED_S)
 	async onOrderAccepted(@Payload() payload: unknown) {
@@ -77,3 +77,4 @@ export class WarehouseEventsListener {
 		await this.orderRepo.updateStatus(orderNumber, OrderStatus.DELIVERED);
 	}
 }
+
