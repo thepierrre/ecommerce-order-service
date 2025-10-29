@@ -21,6 +21,8 @@ import {
 } from "../models/schemas/return-res.schema";
 import type { ReturnsRepository } from "../repositories/returns.repository";
 import { ensureOrderAndReturnExistOrThrow } from "../domain/returns.validator";
+import { WAREHOUSE_ORDER_PACKED_S } from "src/events/warehouse-service/orders/order.packed.v1";
+import { WAREHOUSE_ORDER_PROCESSING_STARTED_S } from "src/events/warehouse-service/orders/order.processing-started.v1";
 
 @Injectable()
 export class ReturnsService {
@@ -91,29 +93,34 @@ export class ReturnsService {
 	}
 
 	async processReturnReceived(orderNumber: string, returnNumber: string) {
-		try {
-			await this.dataSource.transaction(async (m) => {
-				const ordersRepoTx = m.withRepository(this.ordersRepo);
-				const returnsRepoTx = m.withRepository(this.returnsRepo);
+		this.logger.log(
+			`Received ${WAREHOUSE_ORDER_PACKED_S}: ${orderNumber}, ${returnNumber}`,
+		);
 
-				await ensureOrderAndReturnExistOrThrow(ordersRepoTx, returnsRepoTx, orderNumber, returnNumber);
+		await this.dataSource.transaction(async (m) => {
+			const ordersRepoTx = m.withRepository(this.ordersRepo);
+			const returnsRepoTx = m.withRepository(this.returnsRepo);
 
-				await ordersRepoTx.updateStatus(orderNumber, OrderStatus.RETURN_RECEIVED);
-				await returnsRepoTx.updateStatus(returnNumber, ReturnStatus.RECEIVED);
-			});
-		} catch (err) {
-			if (err instanceof HttpException) throw err;
+			await ensureOrderAndReturnExistOrThrow(ordersRepoTx, returnsRepoTx, orderNumber, returnNumber);
 
-			const e = err as Error;
-			this.logger.error(`Failed to process return`, e.stack, { message: e.message });
-			throw new InternalServerErrorException(
-				`Failed to process return`,
-			);
-		}
+			await ordersRepoTx.updateStatus(orderNumber, OrderStatus.RETURN_RECEIVED);
+			await returnsRepoTx.updateStatus(returnNumber, ReturnStatus.RECEIVED);
+		});
+	} catch(err) {
+		if (err instanceof HttpException) throw err;
 
+		const e = err as Error;
+		this.logger.error(`Failed to process return`, e.stack, { message: e.message });
+		throw new InternalServerErrorException(
+			`Failed to process return`,
+		);
 	}
 
 	async processReturnCompleted(orderNumber: string, returnNumber: string) {
+		this.logger.log(
+			`Received ${WAREHOUSE_ORDER_PROCESSING_STARTED_S}: ${orderNumber}, ${returnNumber}`,
+		);
+
 		await this.dataSource.transaction(async (m) => {
 			const ordersRepoTx = m.withRepository(this.ordersRepo);
 			const returnsRepoTx = m.withRepository(this.returnsRepo);
@@ -133,3 +140,6 @@ export class ReturnsService {
 		return !!existing;
 	}
 }
+
+
+

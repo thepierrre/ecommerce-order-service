@@ -15,18 +15,13 @@ export class WarehouseReturnEventsListener {
 	@EventPattern(WAREHOUSE_ORDER_PACKED_S)
 	async onReturnReceived(@Payload() event: Warehouse_ReturnReceived) {
 		const { orderNumber, returnNumber } = event;
-		this.logger.log(
-			`Received ${WAREHOUSE_ORDER_PACKED_S}: ${orderNumber}, ${returnNumber}`,
-		);
 		await this.returnsSvc.processReturnReceived(orderNumber, returnNumber);
 	}
 
 	@EventPattern(WAREHOUSE_ORDER_PROCESSING_STARTED_S)
 	async onReturnCompleted(@Payload() event: Warehouse_ReturnCompleted) {
 		const { orderNumber, returnNumber } = event;
-		this.logger.log(
-			`Received ${WAREHOUSE_ORDER_PROCESSING_STARTED_S}: ${orderNumber}, ${returnNumber}`,
-		);
+		
 		await this.returnsSvc.processReturnCompleted(orderNumber, returnNumber);
 	}
 }
