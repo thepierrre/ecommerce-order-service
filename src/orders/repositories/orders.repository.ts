@@ -13,4 +13,8 @@ export class OrdersRepository extends Repository<Order> {
 	async updateStatus(orderNumber: string, status: OrderStatus): Promise<void> {
 		await this.update({ orderNumber }, { status });
 	}
+
+	async findOneByOrderNumber(orderNumber: string): Promise<Order | null> {
+		return this.findOneBy({ orderNumber });
+	}
 }

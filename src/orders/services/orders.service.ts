@@ -1,13 +1,13 @@
 import {
+	HttpException,
 	Inject,
 	Injectable,
 	InternalServerErrorException,
 	Logger,
+	NotFoundException,
 	PreconditionFailedException,
 } from "@nestjs/common";
 import type { ClientProxy } from "@nestjs/microservices";
-import { InjectRepository } from "@nestjs/typeorm";
-import type { Repository } from "typeorm";
 import {
 	ORDER_ORDER_CREATED_S,
 	toOrder_OrderCreatedEvent,
@@ -27,7 +27,7 @@ export class OrdersService {
 	constructor(
 		@Inject("OrdersRepository") private readonly orderRepo: OrdersRepository,
 		@Inject("NATS_SERVICE") private readonly nats: ClientProxy,
-	) {}
+	) { }
 
 	async create(dto: CreateOrder): Promise<OrderRes> {
 		try {
@@ -43,17 +43,24 @@ export class OrdersService {
 
 			return toOrderRes(saved);
 		} catch (err: unknown) {
+			if (err instanceof HttpException) throw err;
+
 			const e = err as Error;
-			this.logger.error(`Failed to place the order: ${e.message}`, e.stack);
+			this.logger.error(`Failed to place order: `, e.stack, { message: e.message }  );
 			throw new InternalServerErrorException(
-				`Failed to place the order: ${e.message}`,
+				`Failed to place order`,
 			);
 		}
 	}
 
 	async findById(id: string): Promise<OrderRes> {
-		const order = await this.orderRepo.findOneByOrFail({ id });
-		return toOrderRes(order);
+		const existing = await this.orderRepo.findOneBy({ id });
+
+		if (!existing) {
+			throw new NotFoundException(`Order with id ${id} not found`);
+		}
+
+		return toOrderRes(existing);
 	}
 
 	async updateOrder(
@@ -65,27 +72,37 @@ export class OrdersService {
 			throw new PreconditionFailedException("ETag header missing.");
 		}
 
-		const existing: Order = await this.orderRepo.findOneByOrFail({
-			id: id,
+		const existing: Order = await this.orderRepo.findOneBy({
+			id,
 		});
-		// if (!existing) {
-		// 	this.logger.error(`Order with the id ${id} not found.`);
-		// 	throw new NotFoundException(`Order with the id ${id} not found.`);
-		// }
-
-		const currEtag = makeETag(existing);
-		if (etag !== currEtag) {
-			throw new PreconditionFailedException("Resource has changed.");
+		if (!existing) {
+			throw new NotFoundException(`Order with id ${id} not found`);
 		}
 
-		const updated = this.orderRepo.merge(existing, patch);
-		const saved = await this.orderRepo.save(updated);
-		return {
-			order: toOrderRes(saved),
-			newEtag: makeETag({
-				createdAt: saved.createdAt,
-				lastUpdatedAt: saved.lastUpdatedAt,
-			}),
-		};
+		const currEtag = makeETag(existing);
+			if (etag !== currEtag) {
+				throw new PreconditionFailedException("Resource has changed.");
+			}
+
+		try {
+			const updated = this.orderRepo.merge(existing, patch);
+			const saved = await this.orderRepo.save(updated);
+			return {
+				order: toOrderRes(saved),
+				newEtag: makeETag({
+					createdAt: saved.createdAt,
+					lastUpdatedAt: saved.lastUpdatedAt,
+				}),
+			};
+		} catch (err: unknown) {
+			if (err instanceof HttpException) throw err;
+
+			const e = err as Error;
+			this.logger.error(`Failed to update order`, e.stack, { message: e.message });
+			throw new InternalServerErrorException(
+				`Failed to update order`,
+			);
+		}
+
 	}
 }

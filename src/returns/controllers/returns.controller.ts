@@ -38,6 +38,6 @@ export class ReturnsController {
 
 	@Get("internal/orders/:id/returns")
 	async findById(@Param("id") orderId: string): Promise<ReturnRes> {
-		return await this.returnsSvc.findById(orderId);
+		return await this.returnsSvc.findByOrderId(orderId);
 	}
 }
