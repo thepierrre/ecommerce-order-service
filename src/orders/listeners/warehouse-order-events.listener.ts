@@ -22,59 +22,86 @@ import {
 } from "../../events/warehouse-service/orders/order.shipped.v1";
 import { OrderStatus } from "../models/enums/order-status.enum";
 import { OrdersRepository } from "../repositories/orders.repository";
+import { WarehouseEvent } from "src/events/warehouse-service/orders/warehouse-order-event.type";
+import { OrdersService } from "../services/orders.service";
 
 @Controller()
 export class WarehouseOrderEventsListener {
 	private readonly logger = new Logger(WarehouseOrderEventsListener.name);
 
-	constructor(@Inject("OrdersRepository") private readonly orderRepo: OrdersRepository) { }
+	constructor(
+		private readonly ordersSvc: OrdersService,
+		@Inject("OrdersRepository") private readonly orderRepo: OrdersRepository
+	) { }
 
 	@EventPattern(WAREHOUSE_ORDER_ACCEPTED_S)
 	async onOrderAccepted(@Payload() payload: unknown) {
-		const event = Warehouse_OrderAcceptedSchema.parse(payload);
-		const { orderNumber } = event;
-		this.logger.log(`Received ${WAREHOUSE_ORDER_ACCEPTED_S}: ${orderNumber}`);
-		await this.orderRepo.updateStatus(
-			orderNumber,
+		await this.processEvent(
+			WAREHOUSE_ORDER_ACCEPTED_S,
+			payload,
+			Warehouse_OrderAcceptedSchema,
 			OrderStatus.ACCEPTED_BY_WAREHOUSE,
-		);
+		)
 	}
 
 	@EventPattern(WAREHOUSE_ORDER_PROCESSING_STARTED_S)
 	async onOrderProcessingStarted(@Payload() payload: unknown) {
-		const event = Warehouse_OrderProcessingStartedSchema.parse(payload);
-		const { orderNumber } = event;
-		this.logger.log(
-			`Received ${WAREHOUSE_ORDER_PROCESSING_STARTED_S}: ${orderNumber}`,
-		);
-		await this.orderRepo.updateStatus(
-			orderNumber,
+		await this.processEvent(
+			WAREHOUSE_ORDER_PROCESSING_STARTED_S,
+			payload,
+			Warehouse_OrderProcessingStartedSchema,
 			OrderStatus.PROCESSING_BY_WAREHOUSE,
-		);
+		)
 	}
 
 	@EventPattern(WAREHOUSE_ORDER_PACKED_S)
-	async handleOrderPacked(@Payload() payload: unknown) {
-		const event = Warehouse_OrderPackedSchema.parse(payload);
-		const { orderNumber } = event;
-		this.logger.log(`Received ${WAREHOUSE_ORDER_PACKED_S}: ${orderNumber}`);
-		await this.orderRepo.updateStatus(orderNumber, OrderStatus.PACKED);
+	async onOrderPacked(@Payload() payload: unknown) {
+		await this.processEvent(
+			WAREHOUSE_ORDER_PACKED_S,
+			payload,
+			Warehouse_OrderPackedSchema,
+			OrderStatus.PACKED,
+		)
 	}
 
 	@EventPattern(WAREHOUSE_ORDER_SHIPPED_S)
-	async handleOrderShipped(@Payload() payload: unknown) {
-		const event = Warehouse_OrderShippedSchema.parse(payload);
-		const { orderNumber } = event;
-		this.logger.log(`Received ${WAREHOUSE_ORDER_SHIPPED_S}: ${orderNumber}`);
-		await this.orderRepo.updateStatus(orderNumber, OrderStatus.SHIPPED);
+	async onOrderShipped(@Payload() payload: unknown) {
+		await this.processEvent(
+			WAREHOUSE_ORDER_SHIPPED_S,
+			payload,
+			Warehouse_OrderShippedSchema,
+			OrderStatus.SHIPPED,
+		)
 	}
 
 	@EventPattern(WAREHOUSE_ORDER_DELIVERED_S)
-	async handleOrderDelivered(@Payload() payload: unknown) {
-		const event = Warehouse_OrderDeliveredSchema.parse(payload);
-		const { orderNumber } = event;
-		this.logger.log(`Received ${WAREHOUSE_ORDER_DELIVERED_S}: ${orderNumber}`);
-		await this.orderRepo.updateStatus(orderNumber, OrderStatus.DELIVERED);
+	async onOrderDelivered(@Payload() payload: unknown) {
+		await this.processEvent(
+			WAREHOUSE_ORDER_DELIVERED_S,
+			payload,
+			Warehouse_OrderDeliveredSchema,
+			OrderStatus.DELIVERED,
+		)
 	}
+
+	private async processEvent<T>(
+		eventName: string,
+		payload: unknown,
+		schema: { parse: (data: unknown) => T },
+		newStatus: OrderStatus) {
+		try {
+			const event = schema.parse(payload);
+			const { orderNumber } = event as WarehouseEvent;
+			this.logger.log(`Received event ${eventName} for order with number ${orderNumber}`);
+			await this.ordersSvc.updateOrderByOrderNumber(orderNumber, { status: newStatus }, undefined, { skipEtagCheck: true });
+
+
+		} catch (err: unknown) {
+			const e = err as Error;
+			this.logger.error(`Failed to process event ${eventName}`, e.stack, { message: e.message })
+		}
+	}
+
+
 }
 

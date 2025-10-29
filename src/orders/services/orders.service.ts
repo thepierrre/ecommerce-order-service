@@ -19,6 +19,7 @@ import { type OrderRes, toOrderRes } from "../models/schemas/order-res.schema";
 import type { UpdateOrder } from "../models/schemas/update-order.schema";
 import { makeETag } from "../utils/make-etag";
 import type { OrdersRepository } from "../repositories/orders.repository";
+import { id } from "zod/v4/locales";
 
 @Injectable()
 export class OrdersService {
@@ -46,7 +47,7 @@ export class OrdersService {
 			if (err instanceof HttpException) throw err;
 
 			const e = err as Error;
-			this.logger.error(`Failed to place order: `, e.stack, { message: e.message }  );
+			this.logger.error(`Failed to place order: `, e.stack, { message: e.message });
 			throw new InternalServerErrorException(
 				`Failed to place order`,
 			);
@@ -63,26 +64,48 @@ export class OrdersService {
 		return toOrderRes(existing);
 	}
 
-	async updateOrder(
-		id: string,
+	async updateOrderById(
+		id: string, 
 		patch: UpdateOrder,
 		etag?: string,
+		options?: { skipEtagCheck?: boolean }
 	): Promise<{ order: OrderRes; newEtag: string }> {
-		if (!etag) {
+		return this.updateOrder({ id }, patch, etag, options);
+	}
+
+	async updateOrderByOrderNumber(
+		orderNumber: string,
+		patch: UpdateOrder,
+		etag?: string,
+		options?: { skipEtagCheck?: boolean }
+	): Promise<{ order: OrderRes; newEtag: string }> {
+		return this.updateOrder({ orderNumber }, patch, etag, options);
+	}
+
+	private async updateOrder(
+		identifier: { orderNumber: string } | { id: string },
+		patch: UpdateOrder,
+		etag?: string,
+		options?: { skipEtagCheck?: boolean }
+	): Promise<{ order: OrderRes; newEtag: string }> {
+		if (!options?.skipEtagCheck && !etag) {
 			throw new PreconditionFailedException("ETag header missing.");
 		}
 
-		const existing: Order = await this.orderRepo.findOneBy({
-			id,
-		});
+		const where = this.hasOwnId(identifier) ? { id: identifier.id } : { orderNumber: identifier.orderNumber };
+
+		const existing: Order = await this.orderRepo.findOneBy(where);
 		if (!existing) {
-			throw new NotFoundException(`Order with id ${id} not found`);
+			if (this.hasOwnId(identifier)) {
+				throw new NotFoundException(`Order with id ${identifier.id} not found`);
+			}
+			throw new NotFoundException(`Order with order number ${identifier.orderNumber} not found`);
 		}
 
 		const currEtag = makeETag(existing);
-			if (etag !== currEtag) {
-				throw new PreconditionFailedException("Resource has changed.");
-			}
+		if (etag !== currEtag) {
+			throw new PreconditionFailedException("Resource has changed.");
+		}
 
 		try {
 			const updated = this.orderRepo.merge(existing, patch);
@@ -104,5 +127,9 @@ export class OrdersService {
 			);
 		}
 
+	}
+
+	hasOwnId(obj: { id?: string } | { orderNumber?: string }): obj is { id: string } {
+		return obj.hasOwnProperty("id");
 	}
 }
