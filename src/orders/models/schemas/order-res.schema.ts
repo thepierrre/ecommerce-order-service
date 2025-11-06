@@ -22,4 +22,4 @@ export const OrderResSchema = vine.compile(OrderResBuilder);
 
 export type OrderRes = Infer<typeof OrderResSchema>;
 
-export const toOrderRes = (o: Order): Promise<OrderRes> => OrderResSchema.validate(o);
+
