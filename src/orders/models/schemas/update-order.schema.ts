@@ -1,10 +1,12 @@
-import { z } from "zod";
-import { OrderStatus } from "../enums/order-status.enum";
 
-export const UpdateOrderSchema = z.object({
-	contactEmail: z.email().nullish(),
-	shippingAddress: z.string().nullish(),
-	status: z.enum(OrderStatus).nullish(),
+import vine from "@vinejs/vine";
+import { OrderStatus } from "../enums/order-status.enum";
+import { Infer } from "@vinejs/vine/types";
+
+export const UpdateOrderSchema = vine.object({
+	contactEmail: vine.string().email().nullable(),
+	shippingAddress: vine.string().nullable(),
+	status: vine.enum(OrderStatus).nullable(),
 });
 
-export type UpdateOrder = z.infer<typeof UpdateOrderSchema>;
+export type UpdateOrder = Infer<typeof UpdateOrderSchema>;

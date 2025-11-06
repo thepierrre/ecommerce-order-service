@@ -55,7 +55,7 @@ export class OrdersController {
 		@Res({ passthrough: true }) res: Response,
 		@Headers("if-match") etag?: string,
 	): Promise<OrderRes> {
-		const patched = await this.ordersSvc.updateOrder(id, patch, etag);
+		const patched = await this.ordersSvc.updateOrderById(id, patch, etag);
 
 		res.setHeader("ETag", patched.newEtag);
 		res.setHeader("Location", `/orders/${id}`);

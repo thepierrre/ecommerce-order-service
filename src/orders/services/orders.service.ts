@@ -15,7 +15,7 @@ import { type OrderRes, toOrderRes } from "../models/schemas/order-res.schema";
 import type { UpdateOrder } from "../models/schemas/update-order.schema";
 import { makeETag } from "../utils/make-etag";
 import type { OrdersRepository } from "../repositories/orders.repository";
-import { ORDER_ORDER_CREATED_EVENT } from "@thepierrre/ecom-common";
+import { ORDER_ORDER_CREATED_SUBJECT } from "@thepierrre/ecom-common";
 
 @Injectable()
 export class OrdersService {
@@ -36,7 +36,7 @@ export class OrdersService {
 
 			const orderCreatedEvent = toOrder_OrderCreatedEvent(saved);
 
-			this.nats.emit(ORDER_ORDER_CREATED_EVENT, orderCreatedEvent);
+			this.nats.emit(ORDER_ORDER_CREATED_SUBJECT, orderCreatedEvent);
 
 			return toOrderRes(saved);
 		} catch (err: unknown) {
@@ -90,7 +90,7 @@ export class OrdersService {
 
 		const where = this.hasOwnId(identifier) ? { id: identifier.id } : { orderNumber: identifier.orderNumber };
 
-		const existing: Order = await this.orderRepo.findOneBy(where);
+		const existing: Order | null = await this.orderRepo.findOneBy(where);
 		if (!existing) {
 			if (this.hasOwnId(identifier)) {
 				throw new NotFoundException(`Order with id ${identifier.id} not found`);
