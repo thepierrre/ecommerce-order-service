@@ -1,6 +1,6 @@
 import { Controller, Logger } from "@nestjs/common";
 import { EventPattern, Payload } from "@nestjs/microservices";
-import { WAREHOUSE_ORDER_PACKED_S } from "../../events/warehouse-service/orders/order.packed.v1";
+import { WAREHOUSE_ORDER_PICKED_S } from "../../events/warehouse-service/orders/order.picked.v1";
 import { WAREHOUSE_ORDER_PROCESSING_STARTED_S } from "../../events/warehouse-service/orders/order.processing-started.v1";
 import type { Warehouse_ReturnCompleted } from "../../events/warehouse-service/returns/return.completed.v1";
 import type { Warehouse_ReturnReceived } from "../../events/warehouse-service/returns/return.received.v1";
@@ -12,7 +12,7 @@ export class WarehouseReturnEventsListener {
 
 	constructor(private readonly returnsSvc: ReturnsService) {}
 
-	@EventPattern(WAREHOUSE_ORDER_PACKED_S)
+	@EventPattern(WAREHOUSE_ORDER_PICKED_S)
 	async onReturnReceived(@Payload() event: Warehouse_ReturnReceived) {
 		const { orderNumber, returnNumber } = event;
 		await this.returnsSvc.processReturnReceived(orderNumber, returnNumber);

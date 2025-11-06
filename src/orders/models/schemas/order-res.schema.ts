@@ -1,23 +1,24 @@
-import { z } from "zod";
 import type { Order } from "../entities/order.entity";
 import { OrderStatus } from "../enums/order-status.enum";
-import { OrderItemSchema } from "./order-item.schema";
+import { OrderItemBuilder } from "@thepierrre/ecom-common";
+import vine from "@vinejs/vine";
+import { Infer } from "@vinejs/vine/types";
 
-export const OrderResSchema = z.object({
-	id: z.string(),
-	orderNumber: z.string(),
-	userId: z.string(),
-	contactEmail: z.email(),
-	createdAt: z.iso.datetime(),
-	lastUpdatedAt: z.iso.datetime().nullish(),
-	status: z.enum(OrderStatus).transform((v) => v.toLowerCase()),
-	amount: z.number(),
-	shippingMethod: z.string(),
-	shippingAddress: z.string(),
-	items: z.array(OrderItemSchema).min(1),
+export const OrderResSchema = vine.object({
+	id: vine.string(),
+	orderNumber: vine.string(),
+	userId: vine.string(),
+	contactEmail: vine.string().email(),
+	createdAt: vine.date({ formats: ["iso"]}),
+	lastUpdatedAt: vine.date({ formats: ["iso"]}).nullable(),
+	status: vine.enum(OrderStatus).transform((v) => v.toLowerCase()),
+	amount: vine.number(),
+	shippingMethod: vine.string(),
+	shippingAddress: vine.string(),
+	items: vine.array(OrderItemBuilder).minLength(1),
 });
 
-export type OrderRes = z.infer<typeof OrderResSchema>;
+export type OrderRes = Infer<typeof OrderResSchema>;
 
 export const toOrderRes = (o: Order): OrderRes =>
 	OrderResSchema.parse({

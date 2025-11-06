@@ -8,10 +8,6 @@ import {
 	PreconditionFailedException,
 } from "@nestjs/common";
 import type { ClientProxy } from "@nestjs/microservices";
-import {
-	ORDER_ORDER_CREATED_S,
-	toOrder_OrderCreatedEvent,
-} from "../../events/order-service/orders/order.created.v1";
 import { Order } from "../models/entities/order.entity";
 import { OrderStatus } from "../models/enums/order-status.enum";
 import type { CreateOrder } from "../models/schemas/create-order.schema";
@@ -19,7 +15,7 @@ import { type OrderRes, toOrderRes } from "../models/schemas/order-res.schema";
 import type { UpdateOrder } from "../models/schemas/update-order.schema";
 import { makeETag } from "../utils/make-etag";
 import type { OrdersRepository } from "../repositories/orders.repository";
-import { id } from "zod/v4/locales";
+import { ORDER_ORDER_CREATED_EVENT } from "@thepierrre/ecom-common";
 
 @Injectable()
 export class OrdersService {
@@ -40,7 +36,7 @@ export class OrdersService {
 
 			const orderCreatedEvent = toOrder_OrderCreatedEvent(saved);
 
-			this.nats.emit(ORDER_ORDER_CREATED_S, orderCreatedEvent);
+			this.nats.emit(ORDER_ORDER_CREATED_EVENT, orderCreatedEvent);
 
 			return toOrderRes(saved);
 		} catch (err: unknown) {

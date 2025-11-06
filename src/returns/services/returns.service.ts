@@ -21,7 +21,7 @@ import {
 } from "../models/schemas/return-res.schema";
 import type { ReturnsRepository } from "../repositories/returns.repository";
 import { ensureOrderAndReturnExistOrThrow } from "../domain/returns.validator";
-import { WAREHOUSE_ORDER_PACKED_S } from "src/events/warehouse-service/orders/order.packed.v1";
+import { WAREHOUSE_ORDER_PICKED_S } from "src/events/warehouse-service/orders/order.picked.v1";
 import { WAREHOUSE_ORDER_PROCESSING_STARTED_S } from "src/events/warehouse-service/orders/order.processing-started.v1";
 
 @Injectable()
@@ -94,7 +94,7 @@ export class ReturnsService {
 
 	async processReturnReceived(orderNumber: string, returnNumber: string) {
 		this.logger.log(
-			`Received ${WAREHOUSE_ORDER_PACKED_S}: ${orderNumber}, ${returnNumber}`,
+			`Received ${WAREHOUSE_ORDER_PICKED_S}: ${orderNumber}, ${returnNumber}`,
 		);
 
 		await this.dataSource.transaction(async (m) => {
