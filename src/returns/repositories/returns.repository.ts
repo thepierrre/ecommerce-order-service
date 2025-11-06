@@ -18,10 +18,10 @@ export class ReturnsRepository extends Repository<Return> {
 	}
 
 	async findOneByOrderId(orderId: string): Promise<Return | null> {
-		return this.findOneBy({ orderId })
+		return this.findOneBy({ orderId });
 	}
 
 	async findOneByReturnNumber(returnNumber: string): Promise<Return | null> {
-			return this.findOneBy({ returnNumber });
-		}
+		return this.findOneBy({ returnNumber });
+	}
 }

@@ -21,7 +21,7 @@ export class WarehouseReturnEventsListener {
 	@EventPattern(WAREHOUSE_ORDER_PROCESSING_STARTED_S)
 	async onReturnCompleted(@Payload() event: Warehouse_ReturnCompleted) {
 		const { orderNumber, returnNumber } = event;
-		
+
 		await this.returnsSvc.processReturnCompleted(orderNumber, returnNumber);
 	}
 }

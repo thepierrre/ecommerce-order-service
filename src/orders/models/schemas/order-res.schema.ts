@@ -9,8 +9,8 @@ export const OrderResBuilder = vine.object({
 	orderNumber: vine.string(),
 	userId: vine.string(),
 	contactEmail: vine.string().email(),
-	createdAt: vine.date({ formats: ["iso"]}),
-	lastUpdatedAt: vine.date({ formats: ["iso"]}).nullable(),
+	createdAt: vine.date({ formats: ["iso"] }),
+	lastUpdatedAt: vine.date({ formats: ["iso"] }).nullable(),
 	status: vine.enum(OrderStatus).transform((v) => v.toLowerCase()),
 	amount: vine.number(),
 	shippingMethod: vine.string(),
@@ -21,5 +21,3 @@ export const OrderResBuilder = vine.object({
 export const OrderResSchema = vine.compile(OrderResBuilder);
 
 export type OrderRes = Infer<typeof OrderResSchema>;
-
-

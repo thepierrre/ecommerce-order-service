@@ -26,7 +26,7 @@ export class OrdersService {
 	constructor(
 		@Inject("OrdersRepository") private readonly orderRepo: OrdersRepository,
 		@Inject("NATS_SERVICE") private readonly nats: ClientProxy,
-	) { }
+	) {}
 
 	async create(dto: CreateOrder): Promise<OrderRes> {
 		try {
@@ -45,10 +45,10 @@ export class OrdersService {
 			if (err instanceof HttpException) throw err;
 
 			const e = err as Error;
-			this.logger.error(`Failed to place order: `, e.stack, { message: e.message });
-			throw new InternalServerErrorException(
-				`Failed to place order`,
-			);
+			this.logger.error(`Failed to place order: `, e.stack, {
+				message: e.message,
+			});
+			throw new InternalServerErrorException(`Failed to place order`);
 		}
 	}
 
@@ -63,10 +63,10 @@ export class OrdersService {
 	}
 
 	async updateOrderById(
-		id: string, 
+		id: string,
 		patch: UpdateOrder,
 		etag?: string,
-		options?: { skipEtagCheck?: boolean }
+		options?: { skipEtagCheck?: boolean },
 	): Promise<{ order: OrderRes; newEtag: string }> {
 		return this.updateOrder({ id }, patch, etag, options);
 	}
@@ -75,7 +75,7 @@ export class OrdersService {
 		orderNumber: string,
 		patch: UpdateOrder,
 		etag?: string,
-		options?: { skipEtagCheck?: boolean }
+		options?: { skipEtagCheck?: boolean },
 	): Promise<{ order: OrderRes; newEtag: string }> {
 		return this.updateOrder({ orderNumber }, patch, etag, options);
 	}
@@ -84,20 +84,24 @@ export class OrdersService {
 		identifier: { orderNumber: string } | { id: string },
 		patch: UpdateOrder,
 		etag?: string,
-		options?: { skipEtagCheck?: boolean }
+		options?: { skipEtagCheck?: boolean },
 	): Promise<{ order: OrderRes; newEtag: string }> {
 		if (!options?.skipEtagCheck && !etag) {
 			throw new PreconditionFailedException("ETag header missing.");
 		}
 
-		const where = this.hasOwnId(identifier) ? { id: identifier.id } : { orderNumber: identifier.orderNumber };
+		const where = this.hasOwnId(identifier)
+			? { id: identifier.id }
+			: { orderNumber: identifier.orderNumber };
 
 		const existing: Order | null = await this.orderRepo.findOneBy(where);
 		if (!existing) {
 			if (this.hasOwnId(identifier)) {
 				throw new NotFoundException(`Order with id ${identifier.id} not found`);
 			}
-			throw new NotFoundException(`Order with order number ${identifier.orderNumber} not found`);
+			throw new NotFoundException(
+				`Order with order number ${identifier.orderNumber} not found`,
+			);
 		}
 
 		const currEtag = makeETag(existing);
@@ -119,15 +123,16 @@ export class OrdersService {
 			if (err instanceof HttpException) throw err;
 
 			const e = err as Error;
-			this.logger.error(`Failed to update order`, e.stack, { message: e.message });
-			throw new InternalServerErrorException(
-				`Failed to update order`,
-			);
+			this.logger.error(`Failed to update order`, e.stack, {
+				message: e.message,
+			});
+			throw new InternalServerErrorException(`Failed to update order`);
 		}
-
 	}
 
-	hasOwnId(obj: { id?: string } | { orderNumber?: string }): obj is { id: string } {
+	hasOwnId(
+		obj: { id?: string } | { orderNumber?: string },
+	): obj is { id: string } {
 		return obj.hasOwnProperty("id");
 	}
 }

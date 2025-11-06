@@ -1,4 +1,12 @@
-import { ConflictException, HttpException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
+import {
+	ConflictException,
+	HttpException,
+	Inject,
+	Injectable,
+	InternalServerErrorException,
+	Logger,
+	NotFoundException,
+} from "@nestjs/common";
 import type { ClientProxy } from "@nestjs/microservices";
 
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
@@ -34,7 +42,7 @@ export class ReturnsService {
 		@Inject("OrdersRepository") private readonly ordersRepo: OrdersRepository,
 		@Inject("NATS_SERVICE") private readonly nats: ClientProxy,
 		@InjectDataSource() private readonly dataSource: DataSource,
-	) { }
+	) {}
 
 	async createReturn(orderId: string, dto: CreateReturn): Promise<ReturnRes> {
 		const { savedOrder, savedReturn } = await this.dataSource.transaction(
@@ -66,7 +74,9 @@ export class ReturnsService {
 				});
 
 				const savedReturn = await returnRepoTx.save(ret);
-				const savedOrder = await orderRepoTx.save(initializeReturn(existingOrder));
+				const savedOrder = await orderRepoTx.save(
+					initializeReturn(existingOrder),
+				);
 
 				return { savedOrder, savedReturn };
 			},
@@ -86,7 +96,9 @@ export class ReturnsService {
 		const existing = await this.returnsRepo.findOneByOrderId(orderId);
 
 		if (!existing) {
-			throw new NotFoundException(`Return for order with id ${orderId} not found`);
+			throw new NotFoundException(
+				`Return for order with id ${orderId} not found`,
+			);
 		}
 
 		return toReturnRes(existing);
@@ -101,19 +113,25 @@ export class ReturnsService {
 			const ordersRepoTx = m.withRepository(this.ordersRepo);
 			const returnsRepoTx = m.withRepository(this.returnsRepo);
 
-			await ensureOrderAndReturnExistOrThrow(ordersRepoTx, returnsRepoTx, orderNumber, returnNumber);
+			await ensureOrderAndReturnExistOrThrow(
+				ordersRepoTx,
+				returnsRepoTx,
+				orderNumber,
+				returnNumber,
+			);
 
 			await ordersRepoTx.updateStatus(orderNumber, OrderStatus.RETURN_RECEIVED);
 			await returnsRepoTx.updateStatus(returnNumber, ReturnStatus.RECEIVED);
 		});
-	} catch(err) {
+	}
+	catch(err) {
 		if (err instanceof HttpException) throw err;
 
 		const e = err as Error;
-		this.logger.error(`Failed to process return`, e.stack, { message: e.message });
-		throw new InternalServerErrorException(
-			`Failed to process return`,
-		);
+		this.logger.error(`Failed to process return`, e.stack, {
+			message: e.message,
+		});
+		throw new InternalServerErrorException(`Failed to process return`);
 	}
 
 	async processReturnCompleted(orderNumber: string, returnNumber: string) {
@@ -125,7 +143,12 @@ export class ReturnsService {
 			const ordersRepoTx = m.withRepository(this.ordersRepo);
 			const returnsRepoTx = m.withRepository(this.returnsRepo);
 
-			await ensureOrderAndReturnExistOrThrow(ordersRepoTx, returnsRepoTx, orderNumber, returnNumber);
+			await ensureOrderAndReturnExistOrThrow(
+				ordersRepoTx,
+				returnsRepoTx,
+				orderNumber,
+				returnNumber,
+			);
 
 			await ordersRepoTx.updateStatus(
 				orderNumber,
@@ -140,6 +163,3 @@ export class ReturnsService {
 		return !!existing;
 	}
 }
-
-
-

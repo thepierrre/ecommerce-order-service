@@ -12,12 +12,12 @@ import { DataSource } from "typeorm";
 	imports: [TypeOrmModule.forFeature([Return]), OrdersModule],
 	controllers: [ReturnsController, WarehouseReturnEventsListener],
 	providers: [
-			ReturnsService,
-			{
-				provide: "ReturnsRepository",
-				useFactory: (dataSource: DataSource) => new ReturnsRepository(dataSource),
-				inject: [DataSource],
-			},
-		],
+		ReturnsService,
+		{
+			provide: "ReturnsRepository",
+			useFactory: (dataSource: DataSource) => new ReturnsRepository(dataSource),
+			inject: [DataSource],
+		},
+	],
 })
 export class ReturnsModule {}
