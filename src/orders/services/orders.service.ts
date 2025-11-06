@@ -11,11 +11,13 @@ import type { ClientProxy } from "@nestjs/microservices";
 import { Order } from "../models/entities/order.entity";
 import { OrderStatus } from "../models/enums/order-status.enum";
 import type { CreateOrder } from "../models/schemas/create-order.schema";
-import { type OrderRes, toOrderRes } from "../models/schemas/order-res.schema";
+import { type OrderRes } from "../models/schemas/order-res.schema";
 import type { UpdateOrder } from "../models/schemas/update-order.schema";
 import { makeETag } from "../utils/make-etag";
 import type { OrdersRepository } from "../repositories/orders.repository";
 import { ORDER_ORDER_CREATED_SUBJECT } from "@thepierrre/ecom-common";
+import { toOrderCreatedEvent } from "../mappers/to-order-created-event";
+import { toOrderRes } from "../mappers/to-order-res";
 
 @Injectable()
 export class OrdersService {
@@ -34,11 +36,11 @@ export class OrdersService {
 			});
 			const saved = await this.orderRepo.save(createOrder);
 
-			const orderCreatedEvent = toOrder_OrderCreatedEvent(saved);
+			const orderCreatedEvent = await toOrderCreatedEvent(saved);
 
 			this.nats.emit(ORDER_ORDER_CREATED_SUBJECT, orderCreatedEvent);
 
-			return toOrderRes(saved);
+			return await toOrderRes(saved);
 		} catch (err: unknown) {
 			if (err instanceof HttpException) throw err;
 
@@ -107,7 +109,7 @@ export class OrdersService {
 			const updated = this.orderRepo.merge(existing, patch);
 			const saved = await this.orderRepo.save(updated);
 			return {
-				order: toOrderRes(saved),
+				order: await toOrderRes(saved),
 				newEtag: makeETag({
 					createdAt: saved.createdAt,
 					lastUpdatedAt: saved.lastUpdatedAt,
