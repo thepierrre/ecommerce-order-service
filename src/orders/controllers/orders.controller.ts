@@ -15,14 +15,14 @@ import type { Response } from "express";
 
 import {
 	type CreateOrder,
-	CreateOrderSchema,
+	CreateOrderBuilder,
 } from "../models/schemas/create-order.schema";
 import type { OrderRes } from "../models/schemas/order-res.schema";
 import {
 	type UpdateOrder,
 	UpdateOrderSchema,
 } from "../models/schemas/update-order.schema";
-import { ZodValidationPipe } from "../pipes/zod-validation.pipe";
+import { VineValidationPipe } from "../pipes/vine-validation.pipe";
 import { OrdersService } from "../services/orders.service";
 
 @Controller()
@@ -31,7 +31,7 @@ export class OrdersController {
 
 	@Post("orders")
 	@HttpCode(HttpStatus.CREATED)
-	@UsePipes(new ZodValidationPipe(CreateOrderSchema))
+	@UsePipes(new VineValidationPipe(CreateOrderBuilder))
 	async create(
 		@Body() dto: CreateOrder,
 		@Res({ passthrough: true }) res: Response,
@@ -48,7 +48,7 @@ export class OrdersController {
 	}
 
 	@Patch("orders/:id")
-	@UsePipes(new ZodValidationPipe(UpdateOrderSchema))
+	@UsePipes(new VineValidationPipe(UpdateOrderSchema))
 	async update(
 		@Param("id") id: string,
 		@Body() patch: UpdateOrder,

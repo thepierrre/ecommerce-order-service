@@ -2,7 +2,7 @@ import { OrderItemBuilder } from "@thepierrre/ecom-common";
 import vine from "@vinejs/vine";
 import { Infer } from "@vinejs/vine/types";
 
-export const CreateOrderSchema = vine.object({
+export const CreateOrderBuilder = vine.object({
 	userId: vine.string(),
 	contactEmail: vine.string().email(),
 	amount: vine.number().positive(),
@@ -11,4 +11,6 @@ export const CreateOrderSchema = vine.object({
 	items: vine.array(OrderItemBuilder).minLength(1),
 });
 
-export type CreateOrder = Infer<typeof CreateOrderSchema>;
+export const CreateOrderSchema = vine.compile(CreateOrderBuilder);
+
+export type CreateOrder = Infer<typeof CreateOrderBuilder>;

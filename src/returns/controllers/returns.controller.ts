@@ -10,7 +10,7 @@ import {
 	UsePipes,
 } from "@nestjs/common";
 import type { Response } from "express";
-import { ZodValidationPipe } from "../../orders/pipes/zod-validation.pipe";
+import { VineValidationPipe } from "../../orders/pipes/vine-validation.pipe";
 import {
 	type CreateReturn,
 	CreateReturnSchema,
@@ -24,7 +24,7 @@ export class ReturnsController {
 
 	@Post("orders/:id/returns")
 	@HttpCode(HttpStatus.CREATED)
-	@UsePipes(new ZodValidationPipe(CreateReturnSchema))
+	@UsePipes(new VineValidationPipe(CreateReturnSchema))
 	async create(
 		@Param("id") orderId: string,
 		@Body() dto: CreateReturn,
