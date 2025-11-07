@@ -33,8 +33,8 @@ importers:
         specifier: ^1.0.5
         version: 1.0.5
       '@thepierrre/ecom-common':
-        specifier: ^0.0.10
-        version: 0.0.10
+        specifier: ^0.0.13
+        version: 0.0.13
       '@vinejs/vine':
         specifier: ^4.1.0
         version: 4.1.0
@@ -684,8 +684,8 @@ packages:
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
-  '@thepierrre/ecom-common@0.0.10':
-    resolution: {integrity: sha512-lm6u3hgk8miNZ7drmQBD5QcccpL49YawbI4M6QbwYz7Sqshu9z9K1//6qRZxddZt8yUq/5Z03L0wXh//EBVFiA==, tarball: https://npm.pkg.github.com/download/@thepierrre/ecom-common/0.0.10/5b99bfd09cda2cca878956d7266e6941ff9396af}
+  '@thepierrre/ecom-common@0.0.13':
+    resolution: {integrity: sha512-EZhu+NfIaxk6iI6HvSVawxA/Q4Tubf4ioPU5IXmSRh3H9sJ4HoS7/tO12epaZhyeIgbBSZqH/nnpOodaxV/5Qw==, tarball: https://npm.pkg.github.com/download/@thepierrre/ecom-common/0.0.13/5b496449bd66d1e8d6411e0e3257c56d17fd58b9}
 
   '@tokenizer/inflate@0.2.7':
     resolution: {integrity: sha512-MADQgmZT1eKjp06jpI2yozxaU9uVs4GzzgSL+uEq7bVcJ9V1ZXQkeGNql1fsSI0gMy1vhvNTNbUqrx+pZfJVmg==}
@@ -3617,7 +3617,7 @@ snapshots:
 
   '@standard-schema/spec@1.0.0': {}
 
-  '@thepierrre/ecom-common@0.0.10':
+  '@thepierrre/ecom-common@0.0.13':
     dependencies:
       '@vinejs/vine': 4.1.0
 
