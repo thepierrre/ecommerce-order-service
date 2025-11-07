@@ -15,7 +15,6 @@ import type { Response } from "express";
 
 import {
 	type CreateOrder,
-	CreateOrderBuilder,
 } from "../models/schemas/create-order.schema";
 import type { OrderRes } from "../models/schemas/order-res.schema";
 import {
@@ -24,6 +23,7 @@ import {
 } from "../models/schemas/update-order.schema";
 import { VineValidationPipe } from "../pipes/vine-validation.pipe";
 import { OrdersService } from "../services/orders.service";
+import { CreateOrderSchema } from "@thepierrre/ecom-common";
 
 @Controller()
 export class OrdersController {
@@ -31,7 +31,7 @@ export class OrdersController {
 
 	@Post("orders")
 	@HttpCode(HttpStatus.CREATED)
-	@UsePipes(new VineValidationPipe(CreateOrderBuilder))
+	@UsePipes(new VineValidationPipe(CreateOrderSchema))
 	async create(
 		@Body() dto: CreateOrder,
 		@Res({ passthrough: true }) res: Response,
