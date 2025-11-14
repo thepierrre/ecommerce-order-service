@@ -1,6 +1,5 @@
 import { OrderItemBuilder } from "@thepierrre/ecom-common";
 import vine from "@vinejs/vine";
-import { Infer } from "@vinejs/vine/types";
 
 export const CreateOrderBuilder = vine.object({
 	userId: vine.string(),
@@ -13,4 +12,17 @@ export const CreateOrderBuilder = vine.object({
 
 export const CreateOrderSchema = vine.compile(CreateOrderBuilder);
 
-export type CreateOrder = Infer<typeof CreateOrderBuilder>;
+export type CreateOrder = {
+	userId: string;
+	contactEmail: string;
+	amount: number;
+	shippingMethod: string;
+	shippingAddress: string;
+	items: OrderItem[];
+}
+
+export type OrderItem = {
+	productId: string;
+	sku: string;
+	quantity: number;
+}
